@@ -1,6 +1,7 @@
 import numpy as np
 from random import randint
 from numpy.random import choice
+import pprint
 
 
 class Environment(object):
@@ -14,6 +15,15 @@ class Environment(object):
 		return f'N = {len(self.mask)}, isBadSide = {self.mask}'
 		
 	def step(self, action):
+		"""Step function
+
+		Args:
+			action: The action being taken
+
+		Returns:
+			tuple: Containing next state, reward, done and info
+
+		"""
 		self.count += 1
 		if action == 0:
 			return self.bankroll, 0, True, (self.count, None)
@@ -29,10 +39,44 @@ class Environment(object):
 		self.bankroll = 0
 		self.count = 0
 		return self.bankroll
+
+	def get_probs(self, state, action):
+		"""Get transition probabilities after taking action in a given state
+
+		Args:
+			state: The current state
+			action: The action taken
+
+		Returns:
+			list of tuples: A list of tuples containing probability, next_state,
+				reward and done
+
+		"""
+		if self.mask[state - 1] == 1:
+			return [(1, 0, -state, True)]
+
+		if action == 0:
+			return [(1, state, 0, True)]
+
+		result = []
+		for roll in range(1, len(self.mask) + 1):
+			if self.mask[roll - 1] == 1:
+				leaf = (1.0 / len(self.mask), 0, -state, True)
+			else:
+				leaf = (1.0 / len(self.mask), state + roll, roll, False)
+
+			result.append(leaf)
+
+		return result
 		
 		
 if __name__ == '__main__':
-	env = Environment([1, 1, 0, 0, 0, 0])
+	pp = pprint.PrettyPrinter()
+	env = Environment([1, 1, 1, 0, 0, 0])
+	pp.pprint(env.get_probs(0, 1))
+
+	exit(0)
+
 	for i_episode in range(20):
 		print(f'Episode {i_episode + 1}')
 		state = env.reset()
