@@ -5,7 +5,7 @@ import environment as e
 
 
 def policy_risk(state):
-    return [0, 1]
+    return [0.5, 0.5]
 
 
 def policy_evaluation(env, policy, gamma=1, theta=1e-8):
@@ -14,8 +14,7 @@ def policy_evaluation(env, policy, gamma=1, theta=1e-8):
     while True:
         delta = 0
         i += 1
-        print(i)
-        for s in range(len(env.mask)):
+        for s in range(30): #len(env.mask)):
             Vs = 0
             for a, action_prob in enumerate(policy(s)):
                 for prob, next_state, reward, done in env.get_probs(s, a):
@@ -46,6 +45,7 @@ def q_from_v(env, V, s, gamma=1):
 if __name__ == '__main__':
     env = e.Environment([1, 1, 1, 0, 0, 0])
     V = policy_evaluation(env, policy_risk, gamma=1, theta=1e-8)
+    print(V[0])
     #Q = np.zeros([6, 2]) #defaultdict(lambda: [0, 0])
     #for s in range(len(env.mask)):
     #    Q[s] = q_from_v(env, V, s)

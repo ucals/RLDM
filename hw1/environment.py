@@ -52,8 +52,8 @@ class Environment(object):
 				reward and done
 
 		"""
-		if self.mask[state - 1] == 1:
-			return [(1, 0, -state, True)]
+		#if self.mask[state - 1] == 1:
+		#	return [(1, 0, -state, True)]
 
 		if action == 0:
 			return [(1, state, 0, True)]
@@ -61,19 +61,27 @@ class Environment(object):
 		result = []
 		for roll in range(1, len(self.mask) + 1):
 			if self.mask[roll - 1] == 1:
-				leaf = (1.0 / len(self.mask), 0, -state, True)
+				leaf = (1.0 / len(self.mask), 1000, -state, True)
 			else:
 				leaf = (1.0 / len(self.mask), state + roll, roll, False)
 
 			result.append(leaf)
 
 		return result
-		
+
+
+def q_from_v(env, V, s, gamma=1):
+	q = np.zeros(2)
+	for a in range(2):
+		for prob, next_state, reward, done in env.P[s][a]:
+			q[a] += prob * (reward + gamma * V[next_state])
+	return q
+
 		
 if __name__ == '__main__':
 	pp = pprint.PrettyPrinter()
 	env = Environment([1, 1, 1, 0, 0, 0])
-	pp.pprint(env.get_probs(0, 1))
+	pp.pprint(env.get_probs(4, 1))
 
 	exit(0)
 
