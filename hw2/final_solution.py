@@ -1,29 +1,9 @@
 import numpy as np
-from sympy.solvers import solve
-from sympy import Symbol
-from time import time
 import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
 
 
-def plot(E):
-    X = []
-    Y = []
-    for x in np.arange(0, 1, .01):
-        X.append(x)
-        y = 0
-        for i in range(1, len(E)):
-            y += E[i] * (x ** (i - 1)) * (1 - x)
-
-        Y.append(y)
-
-    plt.plot(X, Y)
-    plt.axhline(E[len(E) - 1], color='red')
-    plt.show()
-
-
 if __name__ == '__main__':
-    t = time()
 
     #p = 0.24
     #v = [0.0, 0, 13.7, 0.5, -4.7, 17.6, 0.0]
@@ -32,7 +12,6 @@ if __name__ == '__main__':
     p = 0.62
     v = [0.0, 0.0, 2.6, 19.5, 4.8, 0.6, 0.0]
     r = [-2.8, 4.4, -1.1, 1.1, -2.2, 2.7, 1.6]
-
 
     # Test
     #p = 0.5
@@ -48,9 +27,7 @@ if __name__ == '__main__':
     E[6] = p * (r[0] + r[2]) + (1 - p) * (r[1] + r[3]) + r[4] + r[5] + r[6] + 0 + 0
     print(f'E: {E}')
 
-    #l = Symbol('l')
     def td(l):
-        #return E[1] * (1 - l) + E[2] * l * (1 - l) + E[3] * l**2 * (1 - l) + E[4] * l**3 * (1 - l) + E[5] * l**4
         return E[1] * (1 - l) + E[2] * l * (1 - l) + E[3] * l**2 * (1 - l) + E[4] * l**3 * (1 - l) + E[5] * l**4 * (1 - l) + E[6] * l**5 * (1 - l) + l**6 * E[6]
 
     print(f'TD(0): {td(0)}')
@@ -60,10 +37,10 @@ if __name__ == '__main__':
     print(f'Lambda: {sol:0.6f}')
     print(f'Check: {td(sol)}')
 
-    #x = np.linspace(0, 1)
-    #print(x)
-    #print(td(x))
-    #plt.plot(x, td(x))
-    #plt.axhline(td(1), color='red')
-    #plt.show()
+    plot = False
+    if plot:
+        x = np.linspace(0, 1)
+        plt.plot(x, td(x))
+        plt.axhline(td(1), color='red')
+        plt.show()
 
