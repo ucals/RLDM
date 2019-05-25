@@ -1,9 +1,13 @@
-#!/anaconda3/bin/python
+# TODO:
+#   - Write report
+#   - Write README.md
+#   - Test in ubuntu
+#   - Write comments
 
 import numpy as np
 import pandas as pd
 import matplotlib
-#matplotlib.use('Agg')
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import random
@@ -125,54 +129,6 @@ class Solver(object):
 
         return np.mean(rms)
 
-    def estimate_v_tdlambda_from_data(self, data, lambda_, alpha=0.05,
-                                      gamma=1.0):
-        v = np.repeat(0.5, self.env.size)
-        v[0] = 0
-        v[self.env.size - 1] = 0
-        rms = np.zeros(len(data))
-
-        for i_episode, episode in enumerate(data):
-            state = episode[0][0]
-            eligibility = np.zeros(self.env.size)
-            for _, reward, next_state, done, info in episode[1:]:
-                eligibility *= lambda_ * gamma
-                eligibility[state] += 1.0
-                td_error = reward + gamma * v[next_state] - v[state]
-                v += + alpha * td_error * eligibility
-                state = next_state
-
-            error = self.v_true[1:-1] - v[1:-1]
-            rms[i_episode] = np.sqrt(np.mean(error**2))
-
-        return v[1:-1], rms
-
-    def estimate_v_tdlambda(self, lambda_, v0=None, num_episodes=100,
-                            alpha=0.05, gamma=1.0):
-        v = np.repeat(0.5, self.env.size) if v0 is None else v0
-        v[0] = 0
-        v[self.env.size - 1] = 0
-        rms = np.zeros(num_episodes)
-
-        for i_episode in range(num_episodes):
-            state = self.env.reset()
-            done = False
-            eligibility = np.zeros(self.env.size)
-            while not done:
-                next_state, reward, done, info = self.env.step()
-                eligibility *= lambda_ * gamma
-                eligibility[state] += 1.0
-
-                td_error = reward + gamma * v[next_state] - v[state]
-                v += + alpha * td_error * eligibility
-
-                state = next_state
-
-            error = self.v_true[1:-1] - v[1:-1]
-            rms[i_episode] = np.sqrt(np.mean(error**2))
-
-        return v[1:-1], rms
-
 
 class Plot(object):
     def __init__(self, seed=None):
@@ -183,7 +139,7 @@ class Plot(object):
 
         self.data = self.solver.generate_data()
 
-    def figure3(self, alpha=0.01, lambdas=[0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0],
+    def figure1(self, alpha=0.01, lambdas=[0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0],
                 save_to_file=True):
         lambdas = lambdas
         df = pd.DataFrame(index=lambdas, columns=['data'])
@@ -192,6 +148,7 @@ class Plot(object):
                                            alpha=alpha)
             df.iloc[i_lambda, 0] = rms if rms < 1 else np.NaN
 
+        fig = plt.figure()
         plt.plot(df, 'o-', markersize=4)
         plt.ylabel('RMS Error', fontsize=14)
         plt.xlabel('λ', fontsize=18)
@@ -199,12 +156,12 @@ class Plot(object):
         plt.annotate('Widrow-Hoff', xy=(df.iloc[-1].name, df.iloc[-1].values[0]),
                      xytext=(-135, -8), textcoords='offset pixels', fontsize=14)
         if save_to_file:
-            df.to_csv('figure3.csv')
-            plt.savefig('figure3.png')
+            df.to_csv('figure1.csv')
+            fig.savefig('figure1.png')
         else:
             plt.show()
 
-    def figure4(self, alphas=np.linspace(0.0, 0.6, 13),
+    def figure2(self, alphas=np.linspace(0.0, 0.6, 13),
                 lambdas=[0.0, 0.3, 0.8, 1.0], save_to_file=True):
         alphas = alphas
         lambdas = lambdas
@@ -217,17 +174,18 @@ class Plot(object):
 
         df.columns = [f'λ = {a}' for a in df.columns]
         df.rename(columns={'λ = 1.0': 'λ = 1.0 (Widrow-Hoff)'}, inplace=True)
+        fig = plt.figure()
         plt.plot(df, 'o-', markersize=4)
         plt.legend(df.columns.values, frameon=False)
         plt.ylabel('RMS Error', fontsize=14)
         plt.xlabel('α', fontsize=18)
         if save_to_file:
-            df.to_csv('figure4.csv')
-            plt.savefig('figure4.png')
+            df.to_csv('figure2.csv')
+            fig.savefig('figure2.png')
         else:
             plt.show()
 
-    def figure5(self, alphas=np.linspace(0.0, 0.6, 13),
+    def figure3(self, alphas=np.linspace(0.0, 0.6, 13),
                 lambdas=np.linspace(0.0, 1.0, 11), save_to_file=True):
         alphas = alphas
         lambdas = lambdas
@@ -239,18 +197,25 @@ class Plot(object):
                 df.iloc[i_lambda, i_alpha] = rms
 
         df['best_alpha'] = df.min(axis=1)
+        fig = plt.figure()
         plt.plot(df['best_alpha'], 'o-', markersize=4)
         plt.ylabel('RMS Error using best α', fontsize=14)
         plt.xlabel('λ', fontsize=18)
         plt.annotate('Widrow-Hoff', xy=(df.index[-1], df.iloc[-1, -1]),
                      xytext=(-135, -8), textcoords='offset pixels', fontsize=14)
         if save_to_file:
-            df.to_csv('figure5.csv')
-            plt.savefig('figure5.png')
+            df.to_csv('figure3.csv')
+            fig.savefig('figure3.png')
         else:
             plt.show()
 
 
 if __name__ == '__main__':
     p = Plot(seed=121033)
-    p.figure5()
+    print('Generating Figure 1...')
+    p.figure1()
+    print('\nGenerating Figure 2...')
+    p.figure2()
+    print('\nGenerating Figure 3...')
+    p.figure3()
+    print('\nDONE!')
