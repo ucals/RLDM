@@ -1,6 +1,9 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from collections import defaultdict, deque
+from tqdm import tqdm
+import random
 
 
 class Environment(object):
@@ -58,7 +61,7 @@ class Solver(object):
 
         return v[1:-1], rms
 
-    def estimate_v_td1(self, v0=None, num_episodes=100, gamma=1.0):
+    def estimate_v_mc(self, v0=None, num_episodes=100, gamma=1.0):
         v = np.repeat(0.5, self.env.size) if v0 is None else v0
         v[0] = 0
         v[self.env.size - 1] = 0
@@ -140,17 +143,98 @@ class Solver(object):
 
         return v[1:-1], rms
 
+    def mean_estimate_tdlambda(self, runs, lambda_, v0=None, num_episodes=100,
+                               alpha=0.05, gamma=1.0):
+        rms_stack = None
+        for i in range(runs):
+            v, rms = self.estimate_v_tdlambda(lambda_=lambda_, v0=v0,
+                                              num_episodes=num_episodes,
+                                              alpha=alpha, gamma=gamma)
+            if rms_stack is None:
+                rms_stack = [np.copy(rms)]
+            else:
+                rms_stack = np.vstack((rms_stack, rms))
+
+        return np.mean(rms_stack, axis=0)
+
+
+class Plot(object):
+    def __init__(self, seed=None):
+        self.solver = Solver()
+        if seed is not None:
+            np.random.seed(seed)
+            random.seed(seed)
+
+    def figure3(self):
+        alphas = [0.01] #np.linspace(0.0, 0.6, 13)
+        lambdas = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
+        df = pd.DataFrame(index=lambdas, columns=alphas)
+        for i_alpha, alpha in enumerate(tqdm(alphas)):
+            for i_lambda, lambda_ in enumerate(lambdas):
+                rms = self.solver.mean_estimate_tdlambda(runs=100,
+                                                         lambda_=lambda_,
+                                                         num_episodes=10,
+                                                         alpha=alpha)
+                df.iloc[i_lambda, i_alpha] = rms[-1] if rms[-1] < 1 else np.NaN
+
+        df.to_csv('figure3.csv')
+        print(df)
+        plt.plot(df)
+        plt.show()
+
+    def figure4(self):
+        alphas = np.linspace(0.0, 0.6, 13)
+        lambdas = [0.0, 0.3, 0.8, 1.0]
+        df = pd.DataFrame(index=alphas, columns=lambdas)
+
+        for i_alpha, alpha in enumerate(tqdm(alphas)):
+            for i_lambda, lambda_ in enumerate(lambdas):
+                rms = self.solver.mean_estimate_tdlambda(runs=100,
+                                                         lambda_=lambda_,
+                                                         num_episodes=10,
+                                                         alpha=alpha)
+                df.iloc[i_alpha, i_lambda] = rms[-1] if rms[-1] < 1 else np.NaN
+
+        # df['1.0'].loc[df.index > 0.4] = np.NaN
+        df.to_csv('figure4.csv')
+        print(df)
+        plt.plot(df)
+        plt.legend(df.columns.values)
+        plt.show()
+
+    def figure5(self):
+        alphas = np.linspace(0.05, 0.2, 10) #np.linspace(0.0, 0.6, 13)
+        lambdas = np.linspace(0.0, 1.0, 11)
+        df = pd.DataFrame(index=lambdas, columns=alphas)
+        for i_alpha, alpha in enumerate(tqdm(alphas)):
+            for i_lambda, lambda_ in enumerate(lambdas):
+                rms = self.solver.mean_estimate_tdlambda(runs=100,
+                                                         lambda_=lambda_,
+                                                         num_episodes=10,
+                                                         alpha=alpha)
+                df.iloc[i_lambda, i_alpha] = rms[-1] if rms[-1] < 1 else np.NaN
+
+        df['best_alpha'] = df.min(axis=1)
+        df.to_csv('figure5.csv')
+        print(df)
+        plt.plot(df['best_alpha']) #df.iloc[:, 4])
+        plt.show()
+
 
 if __name__ == '__main__':
+    np.random.seed(10)
+    random.seed(10)
     s = Solver()
-    rms_stack = None
-    for i in range(100):
-        v, rms = s.estimate_v_tdlambda(lambda_=0.15)
-        if rms_stack is None:
-            rms_stack = np.copy(rms)
-        else:
-            rms_stack = np.vstack((rms_stack, rms))
+    v, rms = s.estimate_v_tdlambda(lambda_=0.5, num_episodes=100, alpha=0.05, gamma=1.0)
+    print(v)
+    print(rms[-1])
 
-    rms_mean = np.mean(rms_stack, axis=0)
-    plt.plot(rms_mean)
-    plt.show()
+    exit(0)
+    p = Plot(seed=999) #999 #100
+    p.figure3()
+
+    exit(0)
+    df = pd.read_csv('figure4.csv', index_col=0)
+    print(df)
+    print()
+
