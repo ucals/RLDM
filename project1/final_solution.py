@@ -69,7 +69,8 @@ class Solver(object):
         return sets
 
     def experiment_1(self, training_sets, lambda_, alpha=0.01, gamma=1.0,
-                     theta=1e-4, verbose=False, show_tqdm=False):
+                     theta=1e-4, verbose=False, show_tqdm=False,
+                     traces_mode='accumulating'):
         def progress(f):
             if show_tqdm:
                 return tqdm(f)
@@ -89,10 +90,17 @@ class Solver(object):
                     state = episode[0][0]
                     eligibility = np.zeros(self.env.size)
                     for _, reward, next_state, done, info in episode[1:]:
-                        eligibility *= lambda_ * gamma
-                        eligibility[state] += 1.0
+                        if traces_mode == 'accumulating':
+                            eligibility[state] += 1.0
+                        elif traces_mode == 'replacing':
+                            eligibility[state] = 1.0
+                        else:
+                            raise ValueError("'traces_mode' must be either "
+                                             "'accumulating' or 'replacing'.")
+
                         td_error = reward + gamma * v_old[next_state] - v_old[state]
-                        v += + alpha * td_error * eligibility
+                        v += alpha * td_error * eligibility
+                        eligibility *= lambda_ * gamma
                         state = next_state
 
                 delta = np.sqrt(np.mean((v[1:-1] - v_old[1:-1])**2))
@@ -105,7 +113,8 @@ class Solver(object):
 
         return np.mean(rms)
 
-    def experiment_2(self, training_sets, lambda_, alpha=0.01, gamma=1.0):
+    def experiment_2(self, training_sets, lambda_, alpha=0.01, gamma=1.0,
+                     traces_mode='accumulating'):
         rms = np.zeros(len(training_sets))
         for i_set, training_set in enumerate(training_sets):
             v = np.repeat(0.5, self.env.size)
@@ -117,10 +126,17 @@ class Solver(object):
                 state = episode[0][0]
                 eligibility = np.zeros(self.env.size)
                 for _, reward, next_state, done, info in episode[1:]:
-                    eligibility *= lambda_ * gamma
-                    eligibility[state] += 1.0
+                    if traces_mode == 'accumulating':
+                        eligibility[state] += 1.0
+                    elif traces_mode == 'replacing':
+                        eligibility[state] = 1.0
+                    else:
+                        raise ValueError("'traces_mode' must be either "
+                                         "'accumulating' or 'replacing'.")
+
                     td_error = reward + gamma * v_old[next_state] - v_old[state]
-                    v += + alpha * td_error * eligibility
+                    v += alpha * td_error * eligibility
+                    eligibility *= lambda_ * gamma
                     state = next_state
 
                 v_old = v.copy()
@@ -211,7 +227,7 @@ class Plot(object):
 
 
 if __name__ == '__main__':
-    p = Plot(seed=121033)
+    p = Plot(seed=51180)  # 121033
     print('Generating Figure 1...')
     p.figure1()
     print('\nGenerating Figure 2...')
