@@ -18,7 +18,7 @@
 \usepackage{algpseudocode}
 \usepackage{algpascal}
 \usepackage{graphicx}
-\graphicspath{ {./images/} }
+%\graphicspath{ {./images/} }
 
 \title{Replicating Sutton's $TD(\lambda)$ Algorithm}
 
@@ -117,6 +117,7 @@ We can use equations (\ref{eqn:5}) and (\ref{eqn:6}) to devise $TD(\lambda)$ alg
 \alglanguage{pseudocode}
 \begin{algorithm}
     \caption{Value-state prediction with $TD(\lambda)$}
+    \label{alg:1}
     \begin{algorithmic}
         \State Initialize state-value function $V$ arbitrarily
         \For{$episode \gets 1,\, M$}
@@ -146,7 +147,7 @@ If termination happens by reaching the extreme right ($G$), environment provides
 all the other rewards are zero.
 
 \begin{figure}[t]
-    \includegraphics[scale=0.3]{random_walk.eps}
+    \includegraphics[scale=0.3]{./images/random_walk.eps}
     \centering
     \caption{A bounded random walk generator used in Sutton's original paper.
     All episodes start in state $D$.
@@ -172,11 +173,51 @@ The following sections explain in details how we implemented the experiments, th
 
 \section{Methods}
 \label{sec:methods}
-\lipsum[2]
-\lipsum[3]
+To replicate Sutton's results, we followed the exact protocols described in the article.
+First, we generated the data to be used by all learning procedures, by simulating 100 training sets, each containing 10 episodes (or sequences).
+Then, we implemented the experiments using this data.
+To measure how good the predictions were, we used the root mean squared (RMS) error between the predictions and the true values.
+
+While implementing the experiments, we changed how the algorithm was written.
+Sutton developed all the math in his paper and the algorithms considering that a prediction $P_{t}$ at time step $t$ is function of i) a vector $x_{t}$ of observations available at this time step (representing thus the state), and ii) a vector of modifiable weights, $w$.
+This means he expressed all learning procedures and equations as rules for updating $w$.
+However, the same learning procedures and equations can also be expressed as rules for updating state-value function $V$ directly, as $w = [V(S_{1}), V(S_{2}), V(S_{3}), ...]$, i.e. the vector in which each element is the state-value function $V(s)$ for each $s \in \mathcal{S}$.
+As the underlying math is exactly the same, we arrived at the same results and conclusions, as we will show in the next section.
+
+The first experiment assessed how different values of $\lambda$ produced different predictions with different corresponding RMS errors.
+We used $\lambda = 0, 0.1, 0.3, 0.5, 0.7, 0.9$ and $1$.
+There are 2 special cases in these values: 0 and 1.
+$TD(0)$ is the \emph{one-step} TD, which updates the value-function using the reward from only one step ahead.
+$TD(1)$ is an instance of the Monte Carlo methods, which updates value-function only after the episode is complete, using all the rewards until the end of the episode.
+This case of $\lambda = 1$ is also referred as Widrow-Hoff in the original paper.
+
+In this experiment, the state-value function was not updated neither online (i.e. after each time step, as shown in the algorithm \ref{alg:1}) nor by the end of each episode.
+Instead, the function was only updated after a full loop over all episodes in the training set.
+Also, following the paper, we implemented the \emph{repeated presentations} training paradigm in this experiment: we executed the training loop for each training set repeatedly, using the same data, until the state-value function did not change significantly.
+Here the paper is unclear about: i) the learning rate ($\alpha$) used, ii) how to assess significant changes in the state-value function throughout the simulation, and iii) the minimum threshold difference between different estimates of state-value functions, below which the simulation ends.
+We used $\alpha = 0.01$ (as the paper mentions it used a small learning rate to ensure conversion), RMS error as a way to assess with a single scalar the difference between two estimates of value-functions, and $\theta = 10^{-4}$ as threshold to stop the simulation: whenever the RMS error between two estimates of different value-functions fall below this, the simulation ends.
+
+In the second experiment we simulated different values of $\alpha$ and different values of $\lambda$, to understand the impact of the learning rate in TD.
+Three important changes were made in comparison to the first experiment.
+First, the training loop was executed only once for each training set.
+Second, the state-value function was updated by the end of each episode.
+Third, different than the first experiment, where the state-value function was initialized randomly, now the state-value function was initialized at constant value of $0.5$ for all states.
+We varied $\alpha$ from $0$ to $0.6$ in steps of $0.05$, and $\gamma$ from $0$
+ to $1$ in steps of $0.1$.
 
 \section{Results}
 \label{sec:results}
+
+\begin{figure}[t]
+    \includegraphics[width=\textwidth]{./images/figure.png}
+    \centering
+    \caption{Replication of Figures 3, 4 and 5 from Sutton's original paper.
+    In the left, average error on random walk problem under repeated presentations.
+    In the center, average error on random walk problem after 10 episodes for different values of $\alpha$ and $\gamma$.
+    In the right, average error at best $\alpha$ on random walk problem for different values of $\gamma$.}
+\end{figure}
+
+
 \lipsum[2]
 \lipsum[3]
 

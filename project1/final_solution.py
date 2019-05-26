@@ -6,8 +6,8 @@
 
 import numpy as np
 import pandas as pd
-import matplotlib
-matplotlib.use('Agg')
+#import matplotlib
+#matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import random
@@ -79,9 +79,7 @@ class Solver(object):
 
         rms = np.zeros(len(training_sets))
         for i_set, training_set in enumerate(progress(training_sets)):
-            v = np.repeat(0.5, self.env.size)
-            v[0] = 0
-            v[self.env.size - 1] = 0
+            v = np.random.rand(self.env.size)
             v_old = v.copy()
             delta = 1
 
@@ -98,7 +96,9 @@ class Solver(object):
                             raise ValueError("'traces_mode' must be either "
                                              "'accumulating' or 'replacing'.")
 
-                        td_error = reward + gamma * v_old[next_state] - v_old[state]
+                        td_target = reward + gamma * v_old[next_state] if not done else reward
+                        td_error = td_target - v_old[state]
+
                         v += alpha * td_error * eligibility
                         eligibility *= lambda_ * gamma
                         state = next_state
@@ -118,8 +118,6 @@ class Solver(object):
         rms = np.zeros(len(training_sets))
         for i_set, training_set in enumerate(training_sets):
             v = np.repeat(0.5, self.env.size)
-            v[0] = 0
-            v[self.env.size - 1] = 0
             v_old = v.copy()
 
             for i_episode, episode in enumerate(training_set):
@@ -134,7 +132,8 @@ class Solver(object):
                         raise ValueError("'traces_mode' must be either "
                                          "'accumulating' or 'replacing'.")
 
-                    td_error = reward + gamma * v_old[next_state] - v_old[state]
+                    td_target = reward + gamma * v_old[next_state] if not done else reward
+                    td_error = td_target - v_old[state]
                     v += alpha * td_error * eligibility
                     eligibility *= lambda_ * gamma
                     state = next_state
@@ -147,16 +146,17 @@ class Solver(object):
 
 
 class Plot(object):
-    def __init__(self, seed=None):
+    def __init__(self, seed=None, save_to_file=True):
         self.solver = Solver()
         if seed is not None:
             np.random.seed(seed)
             random.seed(seed)
 
         self.data = self.solver.generate_data()
+        self.save_to_file = save_to_file
 
     def figure1(self, alpha=0.01, lambdas=[0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0],
-                save_to_file=True):
+                axis=None):
         lambdas = lambdas
         df = pd.DataFrame(index=lambdas, columns=['data'])
         for i_lambda, lambda_ in enumerate(tqdm(lambdas)):
@@ -164,21 +164,23 @@ class Plot(object):
                                            alpha=alpha)
             df.iloc[i_lambda, 0] = rms if rms < 1 else np.NaN
 
-        fig = plt.figure()
-        plt.plot(df, 'o-', markersize=4)
-        plt.ylabel('RMS Error', fontsize=14)
-        plt.xlabel('λ', fontsize=18)
-        plt.xticks(df.index.values)
-        plt.annotate('Widrow-Hoff', xy=(df.iloc[-1].name, df.iloc[-1].values[0]),
-                     xytext=(-135, -8), textcoords='offset pixels', fontsize=14)
-        if save_to_file:
+        fig, ax1 = plt.subplots()
+        for ax in [ax1, axis]:
+            ax.plot(df, 'o-', markersize=4)
+            ax.set_ylabel('RMS Error', fontsize=14)
+            ax.set_xlabel(r'$\lambda$', fontsize=18)
+            ax.set_xticks(df.index.values)
+            ax.annotate('Widrow-Hoff', xy=(df.iloc[-1].name, df.iloc[-1].values[0]),
+                         xytext=(-105, -8), textcoords='offset pixels', fontsize=10)
+
+        if self.save_to_file:
             df.to_csv('figure1.csv')
-            fig.savefig('figure1.png')
+            fig.savefig('images/figure1.png')
         else:
             plt.show()
 
     def figure2(self, alphas=np.linspace(0.0, 0.6, 13),
-                lambdas=[0.0, 0.3, 0.8, 1.0], save_to_file=True):
+                lambdas=[0.0, 0.3, 0.8, 1.0], axis=None):
         alphas = alphas
         lambdas = lambdas
         df = pd.DataFrame(index=alphas, columns=lambdas)
@@ -190,19 +192,25 @@ class Plot(object):
 
         df.columns = [f'λ = {a}' for a in df.columns]
         df.rename(columns={'λ = 1.0': 'λ = 1.0 (Widrow-Hoff)'}, inplace=True)
-        fig = plt.figure()
-        plt.plot(df, 'o-', markersize=4)
-        plt.legend(df.columns.values, frameon=False)
-        plt.ylabel('RMS Error', fontsize=14)
-        plt.xlabel('α', fontsize=18)
-        if save_to_file:
+        fig, ax1 = plt.subplots()
+        for ax in [ax1, axis]:
+            ax.plot(df, 'o-', markersize=4)
+            ax.legend(df.columns.values, frameon=False)
+            ax.set_ylabel('RMS Error', fontsize=14)
+            ax.set_xlabel(r'$\alpha$', fontsize=18)
+            legend = ax.get_legend()
+            labels = [] if legend is None else [str(x._text) for x in legend.texts]
+            handles = [] if legend is None else legend.legendHandles
+            ax.legend(reversed(handles), reversed(labels), frameon=False)
+
+        if self.save_to_file:
             df.to_csv('figure2.csv')
-            fig.savefig('figure2.png')
+            fig.savefig('images/figure2.png')
         else:
             plt.show()
 
     def figure3(self, alphas=np.linspace(0.0, 0.6, 13),
-                lambdas=np.linspace(0.0, 1.0, 11), save_to_file=True):
+                lambdas=np.linspace(0.0, 1.0, 11), axis=None):
         alphas = alphas
         lambdas = lambdas
         df = pd.DataFrame(index=lambdas, columns=alphas)
@@ -213,25 +221,37 @@ class Plot(object):
                 df.iloc[i_lambda, i_alpha] = rms
 
         df['best_alpha'] = df.min(axis=1)
-        fig = plt.figure()
-        plt.plot(df['best_alpha'], 'o-', markersize=4)
-        plt.ylabel('RMS Error using best α', fontsize=14)
-        plt.xlabel('λ', fontsize=18)
-        plt.annotate('Widrow-Hoff', xy=(df.index[-1], df.iloc[-1, -1]),
-                     xytext=(-135, -8), textcoords='offset pixels', fontsize=14)
-        if save_to_file:
+        fig, ax1 = plt.subplots()
+        for ax in [ax1, axis]:
+            ax.plot(df['best_alpha'], 'o-', markersize=4)
+            ax.set_ylabel('RMS Error using best α', fontsize=14)
+            ax.set_xlabel(r'$\lambda$', fontsize=18) #
+            ax.annotate('Widrow-Hoff', xy=(df.index[-1], df.iloc[-1, -1]),
+                         xytext=(-105, -8), textcoords='offset pixels', fontsize=10)
+
+        if self.save_to_file:
             df.to_csv('figure3.csv')
-            fig.savefig('figure3.png')
+            fig.savefig('images/figure3.png')
+        else:
+            plt.show()
+
+    def generate_all(self):
+        fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(12, 4))
+        plt.subplots_adjust(left=0.07, right=0.98, top=0.97, bottom=0.15,
+                            wspace=0.27)
+        print('Generating Figure 1...')
+        self.figure1(axis=ax1)
+        print('\nGenerating Figure 2...')
+        self.figure2(axis=ax2)
+        print('\nGenerating Figure 3...')
+        self.figure3(axis=ax3)
+        print('\nDONE!')
+        if self.save_to_file:
+            fig.savefig('images/figure.png')
         else:
             plt.show()
 
 
 if __name__ == '__main__':
-    p = Plot(seed=51180)  # 121033
-    print('Generating Figure 1...')
-    p.figure1()
-    print('\nGenerating Figure 2...')
-    p.figure2()
-    print('\nGenerating Figure 3...')
-    p.figure3()
-    print('\nDONE!')
+    p = Plot(seed=51180)
+    p.generate_all()
