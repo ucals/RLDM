@@ -48,9 +48,9 @@
 \section{Introduction}
 \label{sec:introduction}
 Temporal-difference (TD) learning is a core learning technique in modern reinforcement learning  (Sutton, 1988; Kaelbling, Littman \& Moore; Sutton \& Barto, 1998; Szepesvári, 2014).
-TD learning generates good estimates for expected returns by quickly bootstrapping from other expected-return estimates. TD(\textlambda) is one of the most popular algorithms in TD learning.
+TD learning generates good estimates for expected returns by quickly bootstrapping from other expected-return estimates. TD($\lambda$) is one of the most popular algorithms in TD learning.
 It was first introduced in Sutton's article \emph{Learning to Predict by the Methods of Temporal Differences}, one of the most referenced articles in the field with over 5,000 citations.
-The purpose of this paper is to discuss the results obtained by replicating Sutton's TD(\textlambda) algorithm, providing a complete description of the experiments, implementation details and outcomes.
+The purpose of this paper is to discuss the results obtained by replicating Sutton's TD($\lambda$) algorithm, providing a complete description of the experiments, implementation details and outcomes.
 
 \subsection{Background}
 \label{subsec:background}
@@ -155,6 +155,7 @@ all the other rewards are zero.
     Episode ends when walk reaches either $A$ or $G$.
     In case of episode terminating in $G$, +1 reward is received;
     otherwise, reward is zero.}
+    \label{fig:1}
 \end{figure}
 
 A typical episode terminating in the extreme right might be the following state-reward sequence: $D, 0, C, 0, D, 0, E, 0, F, 0, G, 1$.
@@ -205,141 +206,54 @@ Third, different than the first experiment, where the state-value function was i
 We varied $\alpha$ from $0$ to $0.6$ in steps of $0.05$, and $\gamma$ from $0$
  to $1$ in steps of $0.1$.
 
+
 \section{Results}
 \label{sec:results}
 
 \begin{figure}[t]
     \includegraphics[width=\textwidth]{./images/figure.png}
     \centering
+    \label{fig:fig2}
     \caption{Replication of Figures 3, 4 and 5 from Sutton's original paper.
     In the left, average error on random walk problem under repeated presentations.
     In the center, average error on random walk problem after 10 episodes for different values of $\alpha$ and $\gamma$.
     In the right, average error at best $\alpha$ on random walk problem for different values of $\gamma$.}
 \end{figure}
 
+Figure 2 summarizes the results obtained by replicating Sutton's experiments.
+In the left, the chart shows the results of the first experiment, where RMS errors were calculated between the state-value function true values and the ones estimated after repeated presentations until convergence, for different values of $\lambda$.
+We averaged the errors over 100 training sets, exactly as done by Sutton.
+This chart replicates Figure 3 in the original article.
 
-\lipsum[2]
-\lipsum[3]
+In the center, the chart shows average errors obtained in a single run of each training set, averaged over 100 training sets, for different values of $\alpha$ and $\lambda$
+This chart replicates Figure 4 in the original article.
+
+Finally, in the right, we can see the chart that replicates Figure 5 in Sutton's article.
+The results were produced by experiment 2, after a single run of each training set, also averaged over 100 training sets, for different values of $\alpha$ and $\lambda$.
+For each value of $\lambda$, we selected the best value of $\alpha$.
+
+As we can see, our results matched the overall results obtained by Sutton.
+In the next section we will discuss in details the similarities, the small diferences, and explain why these results were expected.
+
 
 \section{Discussion}
 \label{sec:discussion}
 \lipsum[2]
 \lipsum[3]
 
+\lipsum[2]
+\lipsum[3]
+
+
 \section{Conclusion}
 \label{sec:conclusion}
 \lipsum[2]
 \lipsum[3]
 
-\section{Headings: first level}
-\label{sec:headings}
 
-\lipsum[4] See Section \ref{sec:headings}.
-
-\subsection{Headings: second level}
-\lipsum[5]
-\begin{equation}
-\xi _{ij}(t)=P(x_{t}=i,x_{t+1}=j|y,v,w;\theta)= {\frac {\alpha _{i}(t)a^{w_t}_{ij}\beta _{j}(t+1)b^{v_{t+1}}_{j}(y_{t+1})}{\sum _{i=1}^{N} \sum _{j=1}^{N} \alpha _{i}(t)a^{w_t}_{ij}\beta _{j}(t+1)b^{v_{t+1}}_{j}(y_{t+1})}}
-\end{equation}
-
-\subsubsection{Headings: third level}
-\lipsum[6]
-
-\paragraph{Paragraph}
-\lipsum[7]
-
-\section{Examples of citations, figures, tables, references}
-\label{sec:others}
-\lipsum[8] \cite{kour2014real,kour2014fast} and see \cite{hadash2018estimate}.
-
-The documentation for \verb+natbib+ may be found at
-\begin{center}
-  \url{http://mirrors.ctan.org/macros/latex/contrib/natbib/natnotes.pdf}
-\end{center}
-Of note is the command \verb+\citet+, which produces citations
-appropriate for use in inline text.  For example,
-\begin{verbatim}
-   \citet{hasselmo} investigated\dots
-\end{verbatim}
-produces
-\begin{quote}
-  Hasselmo, et al.\ (1995) investigated\dots
-\end{quote}
-
-\begin{center}
-  \url{https://www.ctan.org/pkg/booktabs}
-\end{center}
-
-
-\subsection{Figures}
-\lipsum[10] 
-See Figure \ref{fig:fig1}. Here is how you add footnotes. \footnote{Sample of the first footnote.}
-\lipsum[11] 
-
-\begin{figure}
-  \centering
-  \fbox{\rule[-.5cm]{4cm}{4cm} \rule[-.5cm]{4cm}{0cm}}
-  \caption{Sample figure caption.}
-  \label{fig:fig1}
-\end{figure}
-
-\subsection{Tables}
-\lipsum[12]
-See awesome Table~\ref{tab:table}.
-
-\begin{table}
- \caption{Sample table title}
-  \centering
-  \begin{tabular}{lll}
-    \toprule
-    \multicolumn{2}{c}{Part}                   \\
-    \cmidrule(r){1-2}
-    Name     & Description     & Size ($\mu$m) \\
-    \midrule
-    Dendrite & Input terminal  & $\sim$100     \\
-    Axon     & Output terminal & $\sim$10      \\
-    Soma     & Cell body       & up to $10^6$  \\
-    \bottomrule
-  \end{tabular}
-  \label{tab:table}
-\end{table}
-
-\subsection{Lists}
-\begin{itemize}
-\item Lorem ipsum dolor sit amet
-\item consectetur adipiscing elit. 
-\item Aliquam dignissim blandit est, in dictum tortor gravida eget. In ac rutrum magna.
-\end{itemize}
-
-
-\bibliographystyle{unsrt}  
-%\bibliography{references}  %%% Remove comment to use the external .bib file (using bibtex).
+\bibliographystyle{unsrt}
+\bibliography{references}  %%% Remove comment to use the external .bib file (using bibtex).
 %%% and comment out the ``thebibliography'' section.
-
-
-%%% Comment out this section when you \bibliography{references} is enabled.
-\begin{thebibliography}{1}
-
-\bibitem{kour2014real}
-George Kour and Raid Saabne.
-\newblock Real-time segmentation of on-line handwritten arabic script.
-\newblock In {\em Frontiers in Handwriting Recognition (ICFHR), 2014 14th
-  International Conference on}, pages 417--422. IEEE, 2014.
-
-\bibitem{kour2014fast}
-George Kour and Raid Saabne.
-\newblock Fast classification of handwritten on-line arabic characters.
-\newblock In {\em Soft Computing and Pattern Recognition (SoCPaR), 2014 6th
-  International Conference of}, pages 312--318. IEEE, 2014.
-
-\bibitem{hadash2018estimate}
-Guy Hadash, Einat Kermany, Boaz Carmeli, Ofer Lavi, George Kour, and Alon
-  Jacovi.
-\newblock Estimate and replace: A novel approach to integrating deep neural
-  networks with existing applications.
-\newblock {\em arXiv preprint arXiv:1804.09028}, 2018.
-
-\end{thebibliography}
 
 
 \end{document}
