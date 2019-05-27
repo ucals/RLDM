@@ -15,7 +15,6 @@ Todo:
     * Write report
     * Write README.md
     * Test in ubuntu
-    * Write comments
     * Include a requirements.txt in the package
     * Create folder 'images' if it doesn't exist
 
@@ -80,7 +79,8 @@ class Environment(object):
         updates the attributes, returing the experience tuple.
 
         Returns:
-            Tuple with next state index, reward
+            Tuple with next state index, reward, done (True if in terminal
+                state), and time step (counter since beginning of simulation).
 
         """
         self.t += 1
@@ -100,6 +100,25 @@ class Environment(object):
 
 
 class Solver(object):
+    """Solver class.
+
+    This class uses the Environment class to generate the data used in the
+    experiments, and perform the experiments 1 and 2 described in Sutton's
+    original paper.
+
+    Args:
+        env (Environment): The environment used to generate data for the
+            experiments. If None, it creates an environment.
+        size (int): If no environment is provided, it creates an environment
+            using this argument as the environment's size
+
+    Attributes:
+        env (Environment): The environment used to generate data for the
+            experiments.
+        v_true (np.array): Array with the true values of the state-value
+            function, used to calculate the RMS error in the experiments.
+
+    """
     def __init__(self, env=None, size=5):
         self.env = Environment(size=size) if env is None else env
         self.v_true = np.zeros(self.env.size)
@@ -107,6 +126,23 @@ class Solver(object):
             self.v_true[i] = i / (self.env.size - 1)
 
     def generate_data(self, num_sets=100, num_episodes=10):
+        """Generates the data used in the experiments.
+
+        This function simulates random walks using the environment class, and
+        returns the data for the experiments.
+
+        Args:
+            num_sets (int): Number of training sets to be generated
+            num_episodes (int): Number of episodes (or sequences) to be
+                generated in each training set.
+
+        Returns:
+            list: list of training sets. Each training set is a list of
+                episodes. And each episode is a list of tuples containing state,
+                reward, next_state, done (True if in terminal state), and info
+                (extra information with time step, not used).
+
+        """
         sets = []
         for i_set in range(num_sets):
             episodes = []
@@ -128,6 +164,32 @@ class Solver(object):
     def experiment_1(self, training_sets, lambda_, alpha=0.01, gamma=1.0,
                      theta=1e-4, verbose=False, show_tqdm=False,
                      traces_mode='accumulating'):
+        """Perform Experiment 1
+
+        This function performs experiment 1 as described in Sutton's original
+        article.
+
+        Args:
+            training_sets: Dataset created by `generate_data` function.
+            lambda_: λ parameter in TD(λ) algorithm.
+            alpha: α parameter, the learning rate (or step-size)
+            gamma: γ parameter, the discount factor
+            theta: Θ parameter, the minimum threshold to stop the simulation
+            verbose: if True, prints information in the screen during simulation
+            show_tqdm: if True, shows progress bar
+            traces_mode: 'accumulating' or 'replacing', different types of
+                eligibility traces update. In the original article (1988),
+                Sutton used accumulating eligibility, the default option. Later,
+                he developed the replacing eligibility idea.
+
+        Returns:
+            float: Root Mean Square (RMS) error between the state-value function
+                estimate and its true value, averaged over the training sets.
+
+        Raises:
+            ValueError: If traces_mode not 'accumulating' or 'replacing'.
+
+        """
         def progress(f):
             if show_tqdm:
                 return tqdm(f)
@@ -155,7 +217,6 @@ class Solver(object):
 
                         td_target = reward + gamma * v_old[next_state] if not done else reward
                         td_error = td_target - v_old[state]
-
                         v += alpha * td_error * eligibility
                         eligibility *= lambda_ * gamma
                         state = next_state
@@ -172,6 +233,29 @@ class Solver(object):
 
     def experiment_2(self, training_sets, lambda_, alpha=0.01, gamma=1.0,
                      traces_mode='accumulating'):
+        """Perform Experiment 2
+
+        This function performs experiment 2 as described in Sutton's original
+        article.
+
+        Args:
+            training_sets: Dataset created by `generate_data` function.
+            lambda_: λ parameter in TD(λ) algorithm.
+            alpha: α parameter, the learning rate (or step-size)
+            gamma: γ parameter, the discount factor
+            traces_mode: 'accumulating' or 'replacing', different types of
+                eligibility traces update. In the original article (1988),
+                Sutton used accumulating eligibility, the default option. Later,
+                he developed the replacing eligibility idea.
+
+        Returns:
+            float: Root Mean Square (RMS) error between the state-value function
+                estimate and its true value, averaged over the training sets.
+
+        Raises:
+            ValueError: If traces_mode not 'accumulating' or 'replacing'.
+
+        """
         rms = np.zeros(len(training_sets))
         for i_set, training_set in enumerate(training_sets):
             v = np.repeat(0.5, self.env.size)
@@ -203,6 +287,24 @@ class Solver(object):
 
 
 class Plot(object):
+    """Plot class.
+
+    This class uses the Solver class to perform the experiments 1 and 2 using
+    different α (learning rates) and λ parameters, creating the charts shown in
+    the report. It replicates Figures 3, 4 and 5 in Sutton's original article.
+
+    Args:
+        seed (int): If True, sets the seed. Useful to reproduce exact results.
+        save_to_file (bool): If True, saves charts in files. Otherwise shows in
+            screen.
+
+    Attributes:
+        solver (Solver): Solver object used in performing experiments.
+        data (list): Dataset with all training sets used in the simulations.
+        save_to_file (bool): If True, saves charts in files. Otherwise shows in
+            screen.
+
+    """
     def __init__(self, seed=None, save_to_file=True):
         self.solver = Solver()
         if seed is not None:
@@ -214,6 +316,18 @@ class Plot(object):
 
     def figure1(self, alpha=0.01, lambdas=[0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0],
                 axis=None):
+        """Generate first chart
+
+        This function generates our first chart, which replicates Sutton's
+        Figure 3 in his original paper.
+
+        Args:
+            alpha (float): α parameter (learning rate) used in the experiments.
+            lambdas (list): list of λ parameters used in the experiments.
+            axis (matplotlib.axes.Axes): used to plot first chart in a combined
+                single figure.
+
+        """
         lambdas = lambdas
         df = pd.DataFrame(index=lambdas, columns=['data'])
         for i_lambda, lambda_ in enumerate(tqdm(lambdas)):
@@ -238,6 +352,19 @@ class Plot(object):
 
     def figure2(self, alphas=np.linspace(0.0, 0.6, 13),
                 lambdas=[0.0, 0.3, 0.8, 1.0], axis=None):
+        """Generate second chart
+
+        This function generates our second chart, which replicates Sutton's
+        Figure 4 in his original paper.
+
+        Args:
+            alphas (list): list of α parameters (learning rates) used in the
+                experiments.
+            lambdas (list): list of λ parameters used in the experiments.
+            axis (matplotlib.axes.Axes): used to plot second chart in a combined
+                single figure.
+
+        """
         alphas = alphas
         lambdas = lambdas
         df = pd.DataFrame(index=alphas, columns=lambdas)
@@ -268,6 +395,19 @@ class Plot(object):
 
     def figure3(self, alphas=np.linspace(0.0, 0.6, 13),
                 lambdas=np.linspace(0.0, 1.0, 11), axis=None):
+        """Generate third chart
+
+        This function generates our second chart, which replicates Sutton's
+        Figure 5 in his original paper.
+
+        Args:
+            alphas (list): list of α parameters (learning rates) used in the
+                experiments.
+            lambdas (list): list of λ parameters used in the experiments.
+            axis (matplotlib.axes.Axes): used to plot third chart in a combined
+                single figure.
+
+        """
         alphas = alphas
         lambdas = lambdas
         df = pd.DataFrame(index=lambdas, columns=alphas)
@@ -293,6 +433,12 @@ class Plot(object):
             plt.show()
 
     def generate_all(self):
+        """Generate all charts
+
+        This function runs all experiments and generates all charts used in the
+        report.
+
+        """
         fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(12, 4))
         plt.subplots_adjust(left=0.07, right=0.98, top=0.97, bottom=0.15,
                             wspace=0.27)
