@@ -33,8 +33,6 @@ the end of the episode:
 
 <a href="https://www.codecogs.com/eqnedit.php?latex=$$G_{t}&space;=&space;\sum_{i=1}^{T-t}&space;\gamma^{i-1}&space;R_{i&plus;1}\label{eqn:1}$$" target="_blank"><img src="https://latex.codecogs.com/gif.latex?$$G_{t}&space;=&space;\sum_{i=1}^{T-t}&space;\gamma^{i-1}&space;R_{i&plus;1}\label{eqn:1}$$" title="$$G_{t} = \sum_{i=1}^{T-t} \gamma^{i-1} R_{i+1}\label{eqn:1}$$" /></a>
 
-[![](https://latex.codecogs.com/gif.latex?$$G_{t}&space;=&space;\sum_{i=1}^{T-t}&space;\gamma^{i-1}&space;R_{i+1}\label{eqn:1}$$ "$$G_{t} = \sum_{i=1}^{T-t} \gamma^{i-1} R_{i+1}\label{eqn:1}$$")](https://www.codecogs.com/eqnedit.php?latex=$$G_{t}&space;=&space;\sum_{i=1}^{T-t}&space;\gamma^{i-1}&space;R_{i+1}\label{eqn:1}$$)
-
 where *T* is the time step of the terminal state.
 
 Our goal is to learn the state-value function $v$ that maps each state

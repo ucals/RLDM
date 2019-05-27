@@ -1,8 +1,27 @@
-# TODO:
-#   - Write report
-#   - Write README.md
-#   - Test in ubuntu
-#   - Write comments
+# -*- coding: utf-8 -*-
+"""OMSCS Reinforcement Learning - CS-7642-O03 - Project #1 Solution
+
+This code solves Project #1 from OMSCS Reinforcement Learning - CS-7642-O03,
+generating the charts used in the report. Running it is straightforward:
+
+    $ python final_solution.py
+
+This will create the figure with all 3 charts in the file 'images/figure.png',
+used in the report. It also creates them in individual files,
+'images/figure1.png', 'images/figure2.png', and 'images/figure3.png', which are
+replications of Sutton's Figure 3, 4 and 5 respectively.
+
+Todo:
+    * Write report
+    * Write README.md
+    * Test in ubuntu
+    * Write comments
+    * Include a requirements.txt in the package
+    * Create folder 'images' if it doesn't exist
+
+Created by Carlos Souza (souza@gatech.edu). May-2019.
+
+"""
 
 import numpy as np
 import pandas as pd
@@ -14,6 +33,30 @@ import random
 
 
 class Environment(object):
+    """Environment class.
+
+    This class simulates the Random Walk environment. At initialization, it
+    receives the random walk size. Then, at each time step, it updates the
+    current state and returns the experience tuples with next state, reward, and
+    whether it reached a terminal state. Inspired in OpenAI gym environments.
+
+    Args:
+        size (int): Size of the random walk, excluding terminals states. For
+            example, in Sutton's original paper, random walk has size = 5.
+
+    Attributes:
+        size (int): Size of the random walk, including terminal states.
+        current_state (int): Index representing the current state. For example:
+            if the random walk has size 7 (including terminal states), in the
+            beginning of the simulation, when in center, current_state is 3
+            (middle point between 0 and 6). If at next time step the move is to
+            the right, current_index become 4. If left, current_index become 2.
+            In this example, current_state = 0 is the terminal state at extreme
+            left (zero reward) and current_state = 6 is the terminal state at
+            extreme right (reward +1).
+        t (int): Number of time steps elapsed since beginning of simulation.
+
+    """
     def __init__(self, size=5):
         self.size = size + 2  # Adding 2 terminal states at beginning and end
         self.current_state = None
@@ -21,11 +64,25 @@ class Environment(object):
         self.reset()
 
     def reset(self):
+        """Reset method.
+
+        Resets the simulation. To be called at the beginning of each simulation.
+
+        """
         self.current_state = int((self.size - 1) / 2)
         self.t = 0
         return self.current_state
 
     def step(self):
+        """Step method.
+
+        At each time step, this method rolls the dice, gets the next state, and
+        updates the attributes, returing the experience tuple.
+
+        Returns:
+            Tuple with next state index, reward
+
+        """
         self.t += 1
         next_state = np.random.choice([-1, 1]) + self.current_state
         self.current_state = next_state
