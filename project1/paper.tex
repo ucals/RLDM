@@ -20,7 +20,7 @@
 \usepackage{graphicx}
 %\graphicspath{ {./images/} }
 
-\title{Replicating Sutton's $TD(\lambda)$ Algorithm}
+\title{Replicating Sutton's TD($\lambda$) Algorithm}
 
 \date{June 1st, 2019}	% Here you can change the date presented in the paper title
 %\date{} 					% Or removing it
@@ -42,13 +42,14 @@
 
 
 % keywords can be removed
-\keywords{First keyword \and Second keyword \and More}
+\keywords{Reinforcement learning \and Temporal-difference (TD) learning \and Markov reward process}
 
 
 \section{Introduction}
 \label{sec:introduction}
-Temporal-difference (TD) learning is a core learning technique in modern reinforcement learning  (Sutton, 1988; Kaelbling, Littman \& Moore; Sutton \& Barto, 1998; Szepesvári, 2014).
-TD learning generates good estimates for expected returns by quickly bootstrapping from other expected-return estimates. TD($\lambda$) is one of the most popular algorithms in TD learning.
+Temporal-difference (TD) learning is a core learning technique in modern reinforcement learning (\cite{Sutton1988}, \cite{Sutton:1998:IRL:551283}, \cite{KLMSurvey}, \cite{Szepesvari:2010:ARL:1855083}).
+TD learning generates good estimates for expected returns by quickly bootstrapping from other expected-return estimates.
+TD($\lambda$) is one of the most popular algorithms in TD learning.
 It was first introduced in Sutton's article \emph{Learning to Predict by the Methods of Temporal Differences}, one of the most referenced articles in the field with over 5,000 citations.
 The purpose of this paper is to discuss the results obtained by replicating Sutton's TD($\lambda$) algorithm, providing a complete description of the experiments, implementation details and outcomes.
 
@@ -86,15 +87,15 @@ Monte Carlo methods wait until the end of the episode, until the full return fol
 where $\alpha$ is the learning-rate.
 The problem with Monte Carlo methods is that $G_{t}$ is only known by the end of the episode, which means these methods must wait until the end of the episode to determine the increment to $V(S_{t})$.
 TD methods, in other hand, need to wait only until the next step $t + 1$.
-The simplest TD method, $TD(0)$, uses the observed reward $R_{t+1}$ and the current estimate $V(S_{t+1})$ from the next time step to update value-function estimate of current state:
+The simplest TD method, TD(0), uses the observed reward $R_{t+1}$ and the current estimate $V(S_{t+1})$ from the next time step to update value-function estimate of current state:
 
 \begin{equation}
     V(S_{t}) \leftarrow V(S_{t}) + \alpha \underbrace{(R_{t+1} + \gamma V(S_{t+1}) - V(S_{t}))}_{\delta \text{, known as TD error}} \label{eqn:4}
 \end{equation}
 
-$TD(0)$, also called \emph{one-step TD}, is just an instance of a more general class of algorithms called $TD(\lambda)$, where $\lambda = 0$.
-The general $TD(\lambda)$ unify and generalize TD and Monte Carlo methods, producing methods that have Monte Carlo at one extreme ($\lambda = 1$) and one-step TD at the other ($\lambda = 0$).
-Its update rule is similar to the $TD(0)$:
+$TD(0)$, also called \emph{one-step TD}, is just an instance of a more general class of algorithms called TD($\lambda$), where $\lambda = 0$.
+The general TD($\lambda$) unify and generalize TD and Monte Carlo methods, producing methods that have Monte Carlo at one extreme ($\lambda = 1$) and one-step TD at the other ($\lambda = 0$).
+Its update rule is similar to the TD(0):
 
 \begin{equation}
     V(S_{t}) \leftarrow V(S_{t}) + \alpha (R_{t+1} + \gamma V(S_{t+1}) - V(S_{t})) \: e(S_{t})\label{eqn:5}
@@ -112,11 +113,11 @@ Eligibility can be updated incrementaly as:
     \end{cases}
 \end{equation}
 
-We can use equations (\ref{eqn:5}) and (\ref{eqn:6}) to devise $TD(\lambda)$ algorithm:
+We can use equations (\ref{eqn:5}) and (\ref{eqn:6}) to devise TD($\lambda$) algorithm:
 
 \alglanguage{pseudocode}
 \begin{algorithm}
-    \caption{Value-state prediction with $TD(\lambda)$}
+    \caption{Value-state prediction with TD($\lambda$)}
     \label{alg:1}
     \begin{algorithmic}
         \State Initialize state-value function $V$ arbitrarily
@@ -169,7 +170,7 @@ Thus, the true values from all states, from $A$ to $G$ respectively, are
     \centering
 \end{equation}
 
-We applied $TD(\lambda)$ algorithm to effectively predict these true values, replicating Sutton's original paper methods and results.
+We applied TD($\lambda$) algorithm to effectively predict these true values, replicating Sutton's original paper methods and results.
 The following sections explain in details how we implemented the experiments, their results, and compares them with the previously published outcomes.
 
 \section{Methods}
@@ -188,8 +189,8 @@ As the underlying math is exactly the same, we arrived at the same results and c
 The first experiment assessed how different values of $\lambda$ produced different predictions with different corresponding RMS errors.
 We used $\lambda = 0, 0.1, 0.3, 0.5, 0.7, 0.9$ and $1$.
 There are 2 special cases in these values: 0 and 1.
-$TD(0)$ is the \emph{one-step} TD, which updates the value-function using the reward from only one step ahead.
-$TD(1)$ is an instance of the Monte Carlo methods, which updates value-function only after the episode is complete, using all the rewards until the end of the episode.
+TD(0) is the \emph{one-step} TD, which updates the value-function using the reward from only one step ahead.
+TD(1) is an instance of the Monte Carlo methods, which updates value-function only after the episode is complete, using all the rewards until the end of the episode.
 This case of $\lambda = 1$ is also referred as Widrow-Hoff in the original paper.
 
 In this experiment, the state-value function was not updated neither online (i.e. after each time step, as shown in the algorithm \ref{alg:1}) nor by the end of each episode.
@@ -206,10 +207,8 @@ Third, different than the first experiment, where the state-value function was i
 We varied $\alpha$ from $0$ to $0.6$ in steps of $0.05$, and $\gamma$ from $0$
  to $1$ in steps of $0.1$.
 
-
-\section{Results}
+\section{Results and Discussion}
 \label{sec:results}
-
 \begin{figure}[t]
     \includegraphics[width=\textwidth]{./images/figure.png}
     \centering
@@ -224,31 +223,33 @@ Figure 2 summarizes the results obtained by replicating Sutton's experiments.
 In the left, the chart shows the results of the first experiment, where RMS errors were calculated between the state-value function true values and the ones estimated after repeated presentations until convergence, for different values of $\lambda$.
 We averaged the errors over 100 training sets, exactly as done by Sutton.
 This chart replicates Figure 3 in the original article.
+Exactly as demonstrated by Sutton, we see, after running the first experiment, that lower values of $\lambda$ produced smaller RMS errors.
+In fact, the best $\lambda$ was zero, and the worst was 1.
+Despite the fact Widrow-Hoff procedure (TD(1)) is an optimal method to minimize error between predictions and actual outcomes in a training set, TD(0) converged to a better state-value function than TD(1).
+That's because, when presented repeatedly to a finite training set, TD(0) converges to the \emph{optimal estimates}, while Widrow-Hoff (TD(1)) converges \emph{to the estimates that minimize the error on the training set}, which are different from the optimal estimates.
 
-In the center, the chart shows average errors obtained in a single run of each training set, averaged over 100 training sets, for different values of $\alpha$ and $\lambda$
+In the center, the chart shows average errors obtained in a single run of each training set, averaged over 100 training sets, for different values of $\alpha$ and $\lambda$.
 This chart replicates Figure 4 in the original article.
+Here, again we confirmed Sutton's empirical results.
+We showed how TD methods produced smaller errors for all $\lambda < 1$, when compared to Widrow-Hoff (TD(1)).
+We also showed how different learning rates produced significantly different state-value function estimates, being the best learning rates around 0.2, as also shown by Sutton.
+As expected, we showed how too small learning rates made all learning procedures generate similar errors (i.e. all the different procedures did not learn successfully with smaller values of $\alpha$).
+And we could observe as well how too large learning rates caused all learning procedures' errors to explode, confirming our expectation that learning rates cannot be neither too small nor too large for learning algorithms to work.
 
 Finally, in the right, we can see the chart that replicates Figure 5 in Sutton's article.
 The results were produced by experiment 2, after a single run of each training set, also averaged over 100 training sets, for different values of $\alpha$ and $\lambda$.
 For each value of $\lambda$, we selected the best value of $\alpha$.
-
-As we can see, our results matched the overall results obtained by Sutton.
-In the next section we will discuss in details the similarities, the small diferences, and explain why these results were expected.
-
-
-\section{Discussion}
-\label{sec:discussion}
-\lipsum[2]
-\lipsum[3]
-
-\lipsum[2]
-\lipsum[3]
-
+Again, our results matched Sutton's: all estimates of state-value function for $\lambda < 1$ produced lower errors than in the $\lambda = 1$ case.
+However, as shown by Sutton, the best case was not $\lambda = 0$, but a value for $\lambda$ around 0.3.
+That's because TD(0) is slow at propagating prediction levels back throughout the episode, given eligibility factor.
+TD algorithm uses the eligibility factor, which in case of $\lambda = 0$, updates only the previously visited state in a given episode.
+For $\lambda > 0$, eligibility updates not only the previously visited state, but all states proportionally, which propagates the prediction levels faster.
+This is not a problem when the training set is repeatedly presented, but that was not the case in experiment 2, when the training set was seen only once by the learning algorithm.
 
 \section{Conclusion}
 \label{sec:conclusion}
-\lipsum[2]
-\lipsum[3]
+In this work, we implemented TD($\lambda$) reinforcement learning algorithm, replicating Figures 3, 4 and 5 from Sutton's 1998 paper \emph{Learning to Predict by the Methods of Temporal Differences}.
+Our results matched the results presented in the paper, and we were able to confirm all main points made in the article about the random walk experiments.
 
 
 \bibliographystyle{unsrt}

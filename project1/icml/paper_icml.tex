@@ -19,14 +19,14 @@
 \newcommand{\theHalgorithm}{\arabic{algorithm}}
 
 % Use the following line for the initial blind version submitted for review:
-\usepackage{icml2019}
+%\usepackage{icml2019}
 
 % If accepted, instead use the following line for the camera-ready submission:
-%\usepackage[accepted]{icml2019}
+\usepackage[accepted]{icml2019}
 
 % The \icmltitle you define below is probably too long as a header.
 % Therefore, a short form for the running title is supplied here:
-\icmltitlerunning{Replicating Sutton's $TD(\lambda)$}
+%\icmltitlerunning{Replicating Sutton's $TD(\lambda)$}
 
 \begin{document}
 
@@ -49,26 +49,10 @@
     \icmlsetsymbol{equal}{*}
 
     \begin{icmlauthorlist}
-        \icmlauthor{Aeiau Zzzz}{equal,to}
-        \icmlauthor{Bauiu C.~Yyyy}{equal,to,goo}
-        \icmlauthor{Cieua Vvvvv}{goo}
-        \icmlauthor{Iaesut Saoeu}{ed}
-        \icmlauthor{Fiuea Rrrr}{to}
-        \icmlauthor{Tateu H.~Yasehe}{ed,to,goo}
-        \icmlauthor{Aaoeu Iasoh}{goo}
-        \icmlauthor{Buiui Eueu}{ed}
-        \icmlauthor{Aeuia Zzzz}{ed}
-        \icmlauthor{Bieea C.~Yyyy}{to,goo}
-        \icmlauthor{Teoau Xxxx}{ed}
-        \icmlauthor{Eee Pppp}{ed}
+        \icmlauthor{Carlos Souza}{equal,to}
     \end{icmlauthorlist}
 
-    \icmlaffiliation{to}{Department of Computation, University of Torontoland, Torontoland, Canada}
-    \icmlaffiliation{goo}{Googol ShallowMind, New London, Michigan, USA}
-    \icmlaffiliation{ed}{School of Computation, University of Edenborrow, Edenborrow, United Kingdom}
-
-    \icmlcorrespondingauthor{Cieua Vvvvv}{c.vvvvv@googol.com}
-    \icmlcorrespondingauthor{Eee Pppp}{ep@eden.co.uk}
+    \icmlaffiliation{to}{Georgia Institute of Technology, São Paulo, Brazil}
 
     % You may provide any keywords that you
     % find helpful for describing your paper; these are used to populate
@@ -93,6 +77,7 @@
         This document provides a basic paper template and submission guidelines.
         Abstracts must be a single paragraph, ideally between 4--6 sentences long.
         Gross violations will trigger corrections at the camera-ready phase.
+        \lipsum[1]
     \end{abstract}
 
     \section{Introduction}
@@ -164,30 +149,30 @@
 
     We can use equations (\ref{eqn:5}) and (\ref{eqn:6}) to devise $TD(\lambda)$ algorithm:
 
-    \alglanguage{pseudocode}
     \begin{algorithm}
         \caption{Value-state prediction with $TD(\lambda)$}
         \label{alg:1}
         \begin{algorithmic}
-            \State Initialize state-value function $V$ arbitrarily
-            \For{$episode \gets 1,\, M$}
-            \State Initialize $S$
-            \State Initialize $e$ to $0$ for all $s \in \mathcal{S}$
-            \For{$t \gets 1,\, T$} \Comment{For each time step $t$ in the $episode$}
-            \State Observe reward $R_{t+1}$ and next state $S_{t+1}$
-            \State $e(S_{t}) \gets e(S_{t}) + 1$
-            \State $\delta \gets R_{t+1} + \gamma V(S_{t+1}) - V(S)$
-            \State $V(s) \gets V(s) + \alpha \: \delta \: e(s)$ for all $s \in \mathcal{S}$
-            \State $e(s) \gets \gamma \: \lambda \: e(s)$ for all $s \in \mathcal{S}$
-            \State $S_{t} \gets S_{t+1}$
-            \EndFor
-            \EndFor
+            \STATE Initialize state-value function $V$ arbitrarily
+            \FOR{$episode \gets 1,\, M$}
+            \STATE Initialize $S$
+            \STATE Initialize $e$ to $0$ for all $s \in \mathcal{S}$
+            \FOR{$t \gets 1,\, T$}
+            \STATE Observe reward $R_{t+1}$ and next state $S_{t+1}$
+            \STATE $e(S_{t}) \gets e(S_{t}) + 1$
+            \STATE $\delta \gets R_{t+1} + \gamma V(S_{t+1}) - V(S)$
+            \STATE $V(s) \gets V(s) + \alpha \: \delta \: e(s)$ for all $s \in \mathcal{S}$
+            \STATE $e(s) \gets \gamma \: \lambda \: e(s)$ for all $s \in \mathcal{S}$
+            \STATE $S_{t} \gets S_{t+1}$
+            \ENDFOR
+            \ENDFOR
         \end{algorithmic}
     \end{algorithm}
 
 
     \subsection{Random Walk}
     \label{subsec:randomwalk}
+
     Sutton (1988) illustrates TD methods with a random-walk example, one of the simplest dynamic systems.
     A bounded random walk is a Markov Reward Process.
     The episodes always start in the middle state $D$.
@@ -196,8 +181,8 @@
     If termination happens by reaching the extreme right ($G$), environment provides a reward of +1;
     all the other rewards are zero.
 
-    \begin{figure}[t]
-        \includegraphics[scale=0.3]{../images/random_walk.eps}
+    \begin{figure}[ht]
+        \includegraphics[scale=0.23]{../images/random_walk.eps}
         \centering
         \caption{A bounded random walk generator used in Sutton's original paper.
         All episodes start in state $D$.
@@ -221,6 +206,7 @@
 
     We applied $TD(\lambda)$ algorithm to effectively predict these true values, replicating Sutton's original paper methods and results.
     The following sections explain in details how we implemented the experiments, their results, and compares them with the previously published outcomes.
+
 
     \section{Methods}
     \label{sec:methods}
@@ -260,7 +246,7 @@
     \section{Results}
     \label{sec:results}
 
-    \begin{figure}[t]
+    \begin{figure*}[t]
         \includegraphics[width=\textwidth]{../images/figure.png}
         \centering
         \label{fig:fig2}
@@ -268,7 +254,7 @@
         In the left, average error on random walk problem under repeated presentations.
         In the center, average error on random walk problem after 10 episodes for different values of $\alpha$ and $\gamma$.
         In the right, average error at best $\alpha$ on random walk problem for different values of $\gamma$.}
-    \end{figure}
+    \end{figure*}
 
     Figure 2 summarizes the results obtained by replicating Sutton's experiments.
     In the left, the chart shows the results of the first experiment, where RMS errors were calculated between the state-value function true values and the ones estimated after repeated presentations until convergence, for different values of $\lambda$.
