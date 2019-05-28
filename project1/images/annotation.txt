@@ -1,0 +1,6 @@
+Training set: 48
+Episode: 0
+Time step: 2
+Current state: E
+Next state: D
+Reward: 0

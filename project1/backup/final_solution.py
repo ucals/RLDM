@@ -302,7 +302,6 @@ class Solver(object):
         rms_1 = defaultdict(list)
         rms_2 = defaultdict(list)
         for i_set, training_set in enumerate(training_sets):
-            sleep(3)
             v_1 = np.repeat(0.5, self.env.size)
             v_old_1 = v_1.copy()
 
@@ -310,7 +309,7 @@ class Solver(object):
             v_old_2 = v_2.copy()
 
             for i_episode, episode in enumerate(training_set):
-                #print(f'Episode {i_episode}')
+                sleep(6)
                 state = episode[0][0]
                 eligibility_1 = np.zeros(self.env.size)
                 eligibility_2 = np.zeros(self.env.size)
@@ -323,16 +322,15 @@ class Solver(object):
                 df_e.iloc[0] = eligibility_1[1:-1]
                 df_e.iloc[1] = eligibility_2[1:-1]
                 df_e.to_csv(file_e)
-                curr_state_str = state_letters[state - 1] if not episode[0][3] else 'terminal'
+                curr_state_str = state_letters[state - 1] if not episode[i_episode][3] else 'terminal'
                 annotation = f'Training set: {i_set}\nEpisode: ' \
-                    f'{i_episode}\nTime step: {0}\nCurrent state: ' \
-                    f'{curr_state_str}\nNext state: {curr_state_str}\nReward: {0}'
+                    f'{i_episode}\nTime step: {1}\nCurrent state: ' \
+                    f'{curr_state_str}\nReward: {0}'
                 with open(file_annotation, "w") as text_file:
                     text_file.write(annotation)
 
-                for state, reward, next_state, done, info in episode:
-                    #print(f'- {state}, {next_state}, {reward}, {done}, {info}')
-                    sleep(.05)
+                for _, reward, next_state, done, info in episode[1:]:
+                    sleep(2)
                     if traces_mode == 'accumulating':
                         eligibility_1[state] += 1.0
                         eligibility_2[state] += 1.0
@@ -361,12 +359,10 @@ class Solver(object):
                     df_e.iloc[0] = eligibility_1[1:-1]
                     df_e.iloc[1] = eligibility_2[1:-1]
                     df_e.to_csv(file_e)
-                    curr_state_str = state_letters[state - 1]
-                    next_state_str = state_letters[next_state - 1] if not done else 'terminal'
+                    curr_state_str = state_letters[next_state - 1] if not done else 'terminal'
                     annotation = f'Training set: {i_set}\nEpisode: ' \
                         f'{i_episode}\nTime step: {info - 1}\nCurrent state: ' \
-                        f'{curr_state_str}\nNext state: {next_state_str}\n' \
-                        f'Reward: {reward}'
+                        f'{curr_state_str}\nReward: {reward}'
                     with open(file_annotation, "w") as text_file:
                         text_file.write(annotation)
 
@@ -374,7 +370,6 @@ class Solver(object):
                     eligibility_2 *= lambdas[1] * gamma
 
                     state = next_state
-                    sleep(.2)
 
                 v_old_1 = v_1.copy()
                 v_old_2 = v_2.copy()
