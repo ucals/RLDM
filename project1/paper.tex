@@ -37,7 +37,10 @@
 \maketitle
 
 \begin{abstract}
-\lipsum[1]
+    TD($\lambda$) is a core algorithm of modern reinforcement learning.
+    The purpose of this paper is to replicate results obtained in Richard Sutton's 1988 Learning to Predict by the Methods of Temporal Differences, in which he introduced temporal difference algorithms, theories and insightful experiments.
+    We review Sutton's methods, replicating the experiment protocols he used to generate the overall same results he achieved in 1988 in the Random Walk Markov Reward Process.
+    Finally, we present and discuss the results obtained, and propose a video animation to facilitate visualizing how differently TD(0) and TD($\lambda$) propagates prediction levels throughout the learning process.
 \end{abstract}
 
 
@@ -251,12 +254,10 @@ To try to visualize how fast TD($\lambda$) propagates prediction levels to other
     \url{https://youtu.be/mBqyQpL8_Vc}
 \end{center}
 
-The animation shows experiment 2 protocol: single run of each training set, for the 100 training sets.
-However, in the animation we simulated 2 TD learning procedures in parallel.
+The animation shows experiment 2 protocol, a single run of each training set, for the 100 training sets, for 2 TD learning procedures in parallel.
 The first, showed in the first column of charts, is a simulation of TD(0).
-The second, showed in the second column of charts, is a simulation of TD($\lambda$) for $\lambda = 0.3$.
-Both simulations run in parallel, using exactly the same data and the same learning rate (0.2).
-In the bottom right of the animation, we can see the RMS error for each of the 10 episodes, averaged over all training sets seen up until that specific moment.
+The second, in the second column, simulates TD($\lambda = 0.3$).
+Both simulations run in parallel, using exactly the same data and same learning rate (0.2).
 We used colors to see how each state-value estimate is changed at each time step.
 The darker the color, the more change it had versus the previous time step.
 This animation, played back in different speeds, helped us visually confirm Sutton's last point about how TD(0) is slow at propagating predictions.

@@ -479,6 +479,7 @@ class Plot(object):
             ax.set_xticks(df.index.values)
             ax.annotate('Widrow-Hoff', xy=(df.iloc[-1].name, df.iloc[-1].values[0]),
                          xytext=(-105, -8), textcoords='offset pixels', fontsize=10)
+            ax.set_facecolor('ivory')
 
         if self.save_to_file:
             df.to_csv('images/figure1.csv')
@@ -522,6 +523,7 @@ class Plot(object):
             labels = [] if legend is None else [str(x._text) for x in legend.texts]
             handles = [] if legend is None else legend.legendHandles
             ax.legend(reversed(handles), reversed(labels), frameon=False)
+            ax.set_facecolor('ivory')
 
         if self.save_to_file:
             df.to_csv('images/figure2.csv')
@@ -561,6 +563,7 @@ class Plot(object):
             ax.set_xlabel(r'$\lambda$', fontsize=18) #
             ax.annotate('Widrow-Hoff', xy=(df.index[-1], df.iloc[-1, -1]),
                          xytext=(-105, -8), textcoords='offset pixels', fontsize=10)
+            ax.set_facecolor('ivory')
 
         if self.save_to_file:
             df.to_csv('images/figure3.csv')
