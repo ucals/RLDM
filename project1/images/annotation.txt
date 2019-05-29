@@ -1,6 +1,6 @@
-Training set: 48
-Episode: 0
-Time step: 2
-Current state: E
-Next state: D
+Training set: 100
+Episode: 10
+Time step: 10
+Current state: A
+Next state: terminal
 Reward: 0

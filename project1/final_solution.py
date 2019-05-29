@@ -31,6 +31,7 @@ from tqdm import tqdm
 import random
 from collections import defaultdict
 from time import sleep
+import argparse
 
 
 class Environment(object):
@@ -174,11 +175,11 @@ class Solver(object):
         Args:
             training_sets: Dataset created by `generate_data` function.
             lambda_: λ parameter in TD(λ) algorithm.
-            alpha: α parameter, the learning rate (or step-size)
-            gamma: γ parameter, the discount factor
-            theta: Θ parameter, the minimum threshold to stop the simulation
-            verbose: if True, prints information in the screen during simulation
-            show_tqdm: if True, shows progress bar
+            alpha: α parameter, the learning rate (or step-size).
+            gamma: γ parameter, the discount factor.
+            theta: Θ parameter, the minimum threshold to stop the simulation.
+            verbose: if True, prints information in the screen during simulation.
+            show_tqdm: if True, shows progress bar.
             traces_mode: 'accumulating' or 'replacing', different types of
                 eligibility traces update. In the original article (1988),
                 Sutton used accumulating eligibility, the default option. Later,
@@ -206,9 +207,8 @@ class Solver(object):
 
             while delta > theta:
                 for i_episode, episode in enumerate(training_set):
-                    state = episode[0][0]
                     eligibility = np.zeros(self.env.size)
-                    for _, reward, next_state, done, info in episode[1:]:
+                    for state, reward, next_state, done, info in episode:
                         if traces_mode == 'accumulating':
                             eligibility[state] += 1.0
                         elif traces_mode == 'replacing':
@@ -221,12 +221,13 @@ class Solver(object):
                         td_error = td_target - v_old[state]
                         v += alpha * td_error * eligibility
                         eligibility *= lambda_ * gamma
-                        state = next_state
 
+                # Calculates difference between new and old state-value function
                 delta = np.sqrt(np.mean((v[1:-1] - v_old[1:-1])**2))
                 if verbose:
                     print(f'v_old: {v_old[1:-1]}; v: {v[1:-1]}; delta: {delta}')
 
+                # Only updates V after all data is presented to learner
                 v_old = v.copy()
 
             rms[i_set] = np.sqrt(np.mean((v[1:-1] - self.v_true[1:-1])**2))
@@ -264,9 +265,8 @@ class Solver(object):
             v_old = v.copy()
 
             for i_episode, episode in enumerate(training_set):
-                state = episode[0][0]
                 eligibility = np.zeros(self.env.size)
-                for _, reward, next_state, done, info in episode[1:]:
+                for state, reward, next_state, done, info in episode:
                     if traces_mode == 'accumulating':
                         eligibility[state] += 1.0
                     elif traces_mode == 'replacing':
@@ -279,8 +279,8 @@ class Solver(object):
                     td_error = td_target - v_old[state]
                     v += alpha * td_error * eligibility
                     eligibility *= lambda_ * gamma
-                    state = next_state
 
+                # Updates state-value function at end of each episode
                 v_old = v.copy()
 
             rms[i_set] = np.sqrt(np.mean((v[1:-1] - self.v_true[1:-1])**2))
@@ -288,8 +288,43 @@ class Solver(object):
         return np.mean(rms)
 
     def experiment_2_live(self, training_sets, file_v, file_e, file_error,
-                          file_annotation, lambdas=[0.0, 0.3], alpha=0.2,
-                          gamma=1.0, traces_mode='accumulating'):
+                          file_annotation, file_evol, lambdas=[0.0, 0.3],
+                          alpha=0.2, gamma=1.0, traces_mode='accumulating',
+                          show_tqdm=True):
+        """Perform experiment 2 in parallen for 2 different λ values.
+
+        This function performs experiment 2 as described in Sutton's original
+        article, but for 2 different values of λ, in parallel. It is used in the
+        function that creates the video animation. Check README.md for more
+        information on how to use it.
+
+        Args:
+            training_sets: Dataset created by `generate_data` function.
+            file_v: File path to save DataFrame with state-value estimates.
+            file_e: File path to save DataFrame with eligibility values.
+            file_error: File path to save DataFrame with RMS error values.
+            file_annotation: File path to save text annotation.
+            file_evol: File path to save DataFrame with RMS error evolution.
+            lambdas: list of 2 λ parameters, to simulate 2 TD(λ) algorithms in
+                parallel.
+            alpha: α parameter, the learning rate (or step-size)
+            gamma: γ parameter, the discount factor
+            traces_mode: 'accumulating' or 'replacing', different types of
+                eligibility traces update. In the original article (1988),
+                Sutton used accumulating eligibility, the default option. Later,
+                he developed the replacing eligibility idea.
+            show_tqdm: if True, shows progress bar.
+
+        Raises:
+            ValueError: If traces_mode not 'accumulating' or 'replacing'.
+
+        """
+        def progress(f):
+            if show_tqdm:
+                return tqdm(f)
+            else:
+                return f
+
         state_letters = [chr(65 + i) for i in range(self.env.size - 2)]
         df_v = pd.DataFrame(index=pd.Index(['v_true'] + lambdas, name='lambda'),
                             columns=state_letters)
@@ -298,10 +333,11 @@ class Solver(object):
         df_error = pd.DataFrame(index=pd.Index(range(1, len(training_sets[0]) + 1),
                                                name='episode'),
                                 columns=lambdas)
+        df_evol = pd.DataFrame(columns=lambdas)
 
         rms_1 = defaultdict(list)
         rms_2 = defaultdict(list)
-        for i_set, training_set in enumerate(training_sets):
+        for i_set, training_set in enumerate(progress(training_sets)):
             sleep(3)
             v_1 = np.repeat(0.5, self.env.size)
             v_old_1 = v_1.copy()
@@ -310,7 +346,6 @@ class Solver(object):
             v_old_2 = v_2.copy()
 
             for i_episode, episode in enumerate(training_set):
-                #print(f'Episode {i_episode}')
                 state = episode[0][0]
                 eligibility_1 = np.zeros(self.env.size)
                 eligibility_2 = np.zeros(self.env.size)
@@ -320,9 +355,6 @@ class Solver(object):
                 df_v.iloc[1] = v_1[1:-1]
                 df_v.iloc[2] = v_2[1:-1]
                 df_v.to_csv(file_v)
-                df_e.iloc[0] = eligibility_1[1:-1]
-                df_e.iloc[1] = eligibility_2[1:-1]
-                df_e.to_csv(file_e)
                 curr_state_str = state_letters[state - 1] if not episode[0][3] else 'terminal'
                 annotation = f'Training set: {i_set}\nEpisode: ' \
                     f'{i_episode}\nTime step: {0}\nCurrent state: ' \
@@ -331,7 +363,6 @@ class Solver(object):
                     text_file.write(annotation)
 
                 for state, reward, next_state, done, info in episode:
-                    #print(f'- {state}, {next_state}, {reward}, {done}, {info}')
                     sleep(.05)
                     if traces_mode == 'accumulating':
                         eligibility_1[state] += 1.0
@@ -363,8 +394,8 @@ class Solver(object):
                     df_e.to_csv(file_e)
                     curr_state_str = state_letters[state - 1]
                     next_state_str = state_letters[next_state - 1] if not done else 'terminal'
-                    annotation = f'Training set: {i_set}\nEpisode: ' \
-                        f'{i_episode}\nTime step: {info - 1}\nCurrent state: ' \
+                    annotation = f'Training set: {i_set + 1}\nEpisode: ' \
+                        f'{i_episode + 1}\nTime step: {info - 1}\nCurrent state: ' \
                         f'{curr_state_str}\nNext state: {next_state_str}\n' \
                         f'Reward: {reward}'
                     with open(file_annotation, "w") as text_file:
@@ -373,14 +404,18 @@ class Solver(object):
                     eligibility_1 *= lambdas[0] * gamma
                     eligibility_2 *= lambdas[1] * gamma
 
-                    state = next_state
-                    sleep(.2)
+                sleep(.2)
 
                 v_old_1 = v_1.copy()
                 v_old_2 = v_2.copy()
 
-                rms_1[i_episode].append(np.sqrt(np.mean((v_1[1:-1] - self.v_true[1:-1])**2)))
-                rms_2[i_episode].append(np.sqrt(np.mean((v_2[1:-1] - self.v_true[1:-1])**2)))
+                e1 = np.sqrt(np.mean((v_1[1:-1] - self.v_true[1:-1])**2))
+                e2 = np.sqrt(np.mean((v_2[1:-1] - self.v_true[1:-1])**2))
+                df_evol.loc[len(df_evol.index)] = [e1, e2]
+                df_evol.to_csv(file_evol)
+
+                rms_1[i_episode].append(e1)
+                rms_2[i_episode].append(e2)
 
             df_error[lambdas[0]] = [np.mean(rms) for k, rms in rms_1.items()]
             df_error[lambdas[1]] = [np.mean(rms) for k, rms in rms_2.items()]
@@ -537,9 +572,10 @@ class Plot(object):
         file_v = 'images/df_v.csv'
         file_e = 'images/df_e.csv'
         file_error = 'images/df_error.csv'
+        file_evol = 'images/df_evol.csv'
         file_annotation = 'images/annotation.txt'
         self.solver.experiment_2_live(self.data, file_v, file_e, file_error,
-                                      file_annotation)
+                                      file_annotation, file_evol)
 
     def generate_all(self):
         """Generate all charts
@@ -565,6 +601,15 @@ class Plot(object):
 
 
 if __name__ == '__main__':
-    p = Plot(seed=51180)
-    #p.generate_all()
-    p.live_plot()
+    parser = argparse.ArgumentParser(description='Generate Project #1 figures.')
+    parser.add_argument('-l', '--live', action="store_true", default=False,
+                        help='Use this flag to generate DataFrames to create'
+                             'video simulation. Check README.md to see how to'
+                             'create the video simulation.')
+    args = parser.parse_args()
+
+    p = Plot(seed=200357)
+    if not args.live:
+        p.generate_all()
+    else:
+        p.live_plot()
