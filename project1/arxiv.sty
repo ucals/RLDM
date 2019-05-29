@@ -40,6 +40,13 @@
 \def\and{\ifhmode\unskip\nobreak\fi\ $\cdot$
 }\noindent\keywordname\enspace\ignorespaces#1\par}}
 
+%Handling Githash
+\def\githashname{{\bfseries \emph GIT hash}}%
+\def\githash#1{\par\addvspace\medskipamount{\rightskip=0pt plus1cm
+%\def\and{\ifhmode\unskip\nobreak\fi\ $\cdot$
+}\noindent\githashname\enspace\ignorespaces#1\par}
+
+
 % font sizes with reduced leading
 \renewcommand{\normalsize}{%
   \@setfontsize\normalsize\@xpt\@xipt

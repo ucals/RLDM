@@ -12,7 +12,6 @@ used in the report. It also creates them in individual files,
 replications of Sutton's Figure 3, 4 and 5 respectively.
 
 Todo:
-    * Write README.md
     * Test in ubuntu
 
 Created by Carlos Souza (souza@gatech.edu). May-2019.
