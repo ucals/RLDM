@@ -246,6 +246,33 @@ TD algorithm uses the eligibility factor, which in case of $\lambda = 0$, update
 For $\lambda > 0$, eligibility updates not only the previously visited state, but all states proportionally, which propagates the prediction levels faster.
 This is not a problem when the training set is repeatedly presented, but that was not the case in experiment 2, when the training set was seen only once by the learning algorithm.
 
+To try to visualize how fast TD($\lambda$) propagates prediction levels to other states in comparison to TD(0), for any $\lambda > 0$, we created a video animation of experiment 2 protocol, which can be seen in the following Youtube link:
+\begin{center}
+    \url{https://youtu.be/mBqyQpL8_Vc}
+\end{center}
+
+The animation shows experiment 2 protocol: single run of each training set, for the 100 training sets.
+However, in the animation we simulated 2 TD learning procedures in parallel.
+The first, showed in the first column of charts, is a simulation of TD(0).
+The second, showed in the second column of charts, is a simulation of TD($\lambda$) for $\lambda = 0.3$.
+Both simulations run in parallel, using exactly the same data and the same learning rate (0.2).
+In the bottom right of the animation, we can see the RMS error for each of the 10 episodes, averaged over all training sets seen up until that specific moment.
+We used colors to see how each state-value estimate is changed at each time step.
+The darker the color, the more change it had versus the previous time step.
+This animation, played back in different speeds, helped us visually confirm Sutton's last point about how TD(0) is slow at propagating predictions.
+\begin{figure}[t]
+    \includegraphics[width=\textwidth]{./images/screenshot.png}
+    \centering
+    \label{fig:fig3}
+    \caption{Screenshot of the video animation showing experiment 2 protocol, performed for 2 TD learning procedures in parallel.
+    The first, TD(0), is shown in first column of charts.
+    The second, TD($\lambda$) for $\lambda = 0.3$, is shown in the second column of charts.
+    In the first row of charts, we show the current estimate of the state-value function for each of the TD learning procedures.
+    In the second row, we show the eligibility of each state at that specific time step, for each of the TD learning procedures (TD(0) in blue, TD($\lambda = 0.3$) in red).
+    The upper right corner of the screenshot shows specific information about the current state of the simulation.
+    The lower right corner of the screenshot shows the RMS error for each of the 10 episodes, averaged over all training sets seen up until that specific moment.}
+\end{figure}
+
 \section{Conclusion}
 \label{sec:conclusion}
 In this work, we implemented TD($\lambda$) reinforcement learning algorithm, replicating Figures 3, 4 and 5 from Sutton's 1998 paper \emph{Learning to Predict by the Methods of Temporal Differences}.

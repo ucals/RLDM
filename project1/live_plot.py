@@ -47,53 +47,91 @@ def animate(i, file_v, file_e, file_error, file_annotation, file_evol):
             for t in fig.texts:
                 t.remove()
 
-            #Ax1
-            bl1 = ax1.bar(df_v.columns, df_v.iloc[1], color='cornflowerblue')
-            if curr_state_index != -1:
-                bl1[curr_state_index].set_color('blue')
-            if next_state_index != -1:
-                bl1[next_state_index].set_color('mediumblue')
+            base_color = 'lime'
+            max_color = 'darkgreen'
+            bg_color = 'ivory'
+            factor = 1.5
+
+            # Ax1
+            bl1 = ax1.bar(df_v.columns, df_v.iloc[1], color=base_color)
+            for i, bar1 in enumerate(bl1):
+                amount = df_e.iloc[0, i] * factor if df_e.iloc[0, i] * factor <= 1 else 1
+                c = darken_color(base_color, amount)
+                if amount == 1:
+                    c = max_color
+                bar1.set_color(c)
 
             ax1.plot(df_v.columns, df_v.iloc[0], 'ys')
             ax1.set_title(f'$\lambda = {df_v.index.values[1]}$')
             ax1.set_ylabel('State-value function estimate')
+            ax1.set_facecolor(bg_color)
 
-            #Ax2
-            bl2 = ax2.bar(df_v.columns, df_v.iloc[2], color='cornflowerblue')
-            if curr_state_index != -1:
-                bl2[curr_state_index].set_color('blue')
-            if next_state_index != -1:
-                bl2[next_state_index].set_color('mediumblue')
+            # Ax2
+            bl2 = ax2.bar(df_v.columns, df_v.iloc[2], color=base_color)
+            for i, bar2 in enumerate(bl2):
+                amount = df_e.iloc[1, i] * factor if df_e.iloc[1, i] * factor <= 1 else 1
+                c = darken_color(base_color, amount)
+                if amount == 1:
+                    c = max_color
+                bar2.set_color(c)
 
             ax2.plot(df_v.columns, df_v.iloc[0], 'ys')
             ax2.set_title(f'$\lambda = {df_v.index.values[2]}$')
             ax2.set_ylabel('State-value function estimate')
+            ax2.set_facecolor(bg_color)
 
-            #Ax3
-            ax3.bar(df_e.columns, df_e.iloc[0])
+            # Ax3
+            ax3.bar(df_e.columns, df_e.iloc[0], color='royalblue')
             ax3.set_title(f'$\lambda = {df_e.index.values[0]}$')
             ax3.set_ylabel('Eligibility')
+            ax3.set_facecolor(bg_color)
 
-            #Ax4
-            ax4.bar(df_e.columns, df_e.iloc[1])
+            # Ax4
+            ax4.bar(df_e.columns, df_e.iloc[1], color='r')
             ax4.set_title(f'$\lambda = {df_e.index.values[1]}$')
             ax4.set_ylabel('Eligibility')
+            ax4.set_facecolor(bg_color)
 
-            #Ax5
+            # Ax5
             if os.path.isfile(file_error):
                 df_error = pd.read_csv(file_error, index_col=0)
-                ax5.plot(df_error.iloc[:, 0], label=f'$\lambda = {df_error.columns[0]}$')
-                ax5.plot(df_error.iloc[:, 1], label=f'$\lambda = {df_error.columns[1]}$')
+                ax5.plot(df_error.iloc[:, 0], 'o-',
+                         label=f'$\lambda = {df_error.columns[0]}$',
+                         color='royalblue', markersize=2)
+                ax5.plot(df_error.iloc[:, 1], 'o-',
+                         label=f'$\lambda = {df_error.columns[1]}$',
+                         color='red', markersize=2)
                 ax5.set_title('RMS Error vs. true state-values')
                 ax5.set_ylabel('RMS Error')
                 ax5.set_xlabel('Episodes')
                 ax5.legend(frameon=False)
+                ax5.set_facecolor(bg_color)
 
-            #Annotation info
+            # Annotation info
             plt.figtext(.67, .62, annotation, fontsize=22, linespacing=1.5)
 
         except EmptyDataError:
             pass
+
+
+def darken_color(color, amount=0.5):
+    """
+    Darkens the given color by multiplying (1-luminosity) by the given amount.
+    Input can be matplotlib color string, hex string, or RGB tuple.
+
+    Examples:
+    >> darken_color('g', 0.3)
+    >> darken_color('#F034A3', 0.6)
+    >> darken_color((.3,.55,.1), 0.5)
+    """
+    import matplotlib.colors as mc
+    import colorsys
+    try:
+        c = mc.cnames[color]
+    except:
+        c = color
+    c = colorsys.rgb_to_hls(*mc.to_rgb(c))
+    return colorsys.hls_to_rgb(c[0], 1 - (amount + 1) * (1 - c[1]), c[2])
 
 
 if __name__ == '__main__':
