@@ -1,8 +1,8 @@
 # Replicating Sutton's TD(&lambda;) Algorithm
-This code solves Project #1 from OMSCS Reinforcement Learning - CS-7642-O03, generating the charts used in the report:
+This code solves 1st project of CS-7642-O03 Reinforcement Learning and Decision Making, part of OMSCS program, generating the charts used in the report:
 ![Image](images/figure.png)
 
-### Usage
+## Usage
 Running it is pretty straightforward. Just do:
 ```bash
 python final_solution.py
@@ -19,12 +19,12 @@ python final_solution.py --live
 ```
 The default behaviour of `live_plot.py` program is to save the video in the file `images/animation.mp4`. If instead you want to see it in the screen, run `python live_plot --show` instead.
 
-### Installation
+## Installation
 After cloning the code into your local environment, run:
 ```bash
 pip install -r requirements.txt
 ```
 to install all dependencies needed to run this program.
 
-### Author
+## Author
 This program was created by [Carlos Souza](mailto:souza@gatech.edu), as 1st project of CS-7642-O03 Reinforcement Learning and Decision Making, part of OMSCS program.
