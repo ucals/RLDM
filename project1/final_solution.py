@@ -291,7 +291,7 @@ class Solver(object):
                           file_annotation, file_evol, lambdas=[0.0, 0.3],
                           alpha=0.2, gamma=1.0, traces_mode='accumulating',
                           show_tqdm=True):
-        """Perform experiment 2 in parallen for 2 different λ values.
+        """Perform experiment 2 in parallel for 2 different λ values.
 
         This function performs experiment 2 as described in Sutton's original
         article, but for 2 different values of λ, in parallel. It is used in the
