@@ -12,11 +12,8 @@ used in the report. It also creates them in individual files,
 replications of Sutton's Figure 3, 4 and 5 respectively.
 
 Todo:
-    * Write report
     * Write README.md
     * Test in ubuntu
-    * Include a requirements.txt in the package
-    * Create folder 'images' if it doesn't exist
 
 Created by Carlos Souza (souza@gatech.edu). May-2019.
 
@@ -32,6 +29,7 @@ import random
 from collections import defaultdict
 from time import sleep
 import argparse
+import os
 
 
 class Environment(object):
@@ -433,15 +431,17 @@ class Plot(object):
         seed (int): If True, sets the seed. Useful to reproduce exact results.
         save_to_file (bool): If True, saves charts in files. Otherwise shows in
             screen.
+        images_folder (str): Folder where to save the images.
 
     Attributes:
         solver (Solver): Solver object used in performing experiments.
         data (list): Dataset with all training sets used in the simulations.
         save_to_file (bool): If True, saves charts in files. Otherwise shows in
             screen.
+        images_folder (str): Folder where to save the images
 
     """
-    def __init__(self, seed=None, save_to_file=True):
+    def __init__(self, seed=None, save_to_file=True, images_folder='images'):
         self.solver = Solver()
         if seed is not None:
             np.random.seed(seed)
@@ -449,6 +449,9 @@ class Plot(object):
 
         self.data = self.solver.generate_data()
         self.save_to_file = save_to_file
+        self.images_folder = images_folder
+        if not os.path.exists(images_folder):
+            os.makedirs(images_folder)
 
     def figure1(self, alpha=0.01, lambdas=[0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0],
                 axis=None):
@@ -482,8 +485,8 @@ class Plot(object):
             ax.set_facecolor('ivory')
 
         if self.save_to_file:
-            df.to_csv('images/figure1.csv')
-            fig.savefig('images/figure1.png')
+            df.to_csv(f'{self.images_folder}/figure1.csv')
+            fig.savefig(f'{self.images_folder}/figure1.png')
         else:
             plt.show()
 
@@ -526,8 +529,8 @@ class Plot(object):
             ax.set_facecolor('ivory')
 
         if self.save_to_file:
-            df.to_csv('images/figure2.csv')
-            fig.savefig('images/figure2.png')
+            df.to_csv(f'{self.images_folder}/figure2.csv')
+            fig.savefig(f'{self.images_folder}/figure2.png')
         else:
             plt.show()
 
@@ -566,17 +569,17 @@ class Plot(object):
             ax.set_facecolor('ivory')
 
         if self.save_to_file:
-            df.to_csv('images/figure3.csv')
-            fig.savefig('images/figure3.png')
+            df.to_csv(f'{self.images_folder}/figure3.csv')
+            fig.savefig(f'{self.images_folder}/figure3.png')
         else:
             plt.show()
 
     def live_plot(self):
-        file_v = 'images/df_v.csv'
-        file_e = 'images/df_e.csv'
-        file_error = 'images/df_error.csv'
-        file_evol = 'images/df_evol.csv'
-        file_annotation = 'images/annotation.txt'
+        file_v = f'{self.images_folder}/df_v.csv'
+        file_e = f'{self.images_folder}/df_e.csv'
+        file_error = f'{self.images_folder}/df_error.csv'
+        file_evol = f'{self.images_folder}/df_evol.csv'
+        file_annotation = f'{self.images_folder}/annotation.txt'
         self.solver.experiment_2_live(self.data, file_v, file_e, file_error,
                                       file_annotation, file_evol)
 
@@ -598,7 +601,7 @@ class Plot(object):
         self.figure3(axis=ax3)
         print('\nDONE!')
         if self.save_to_file:
-            fig.savefig('images/figure.png')
+            fig.savefig(f'{self.images_folder}/figure.png')
         else:
             plt.show()
 
