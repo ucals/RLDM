@@ -24,7 +24,12 @@ After cloning the code into your local environment, run:
 ```bash
 pip3 install -r requirements.txt
 ```
-to install all dependencies needed to run this program. This program was written in [Python 3.6](https://www.python.org/).
+to install all dependencies needed to run this program. This program was written in [Python 3.6](https://www.python.org/). If you run it in a clean Ubuntu image, you might need to install PIP and Tkinter before running the program:
+
+```bash
+sudo apt install python3-pip
+sudo apt-get install python3-tk 
+```
 
 ## Author
 This program was created by [Carlos Souza](mailto:souza@gatech.edu), as 1st project of CS-7642-O03 Reinforcement Learning and Decision Making, part of OMSCS program.

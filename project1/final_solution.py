@@ -11,6 +11,9 @@ used in the report. It also creates them in individual files,
 'images/figure1.png', 'images/figure2.png', and 'images/figure3.png', which are
 replications of Sutton's Figure 3, 4 and 5 respectively.
 
+TODO:
+    * Test again in Linux (after conditional importing)
+
 Created by Carlos Souza (souza@gatech.edu)
 May-2019
 
@@ -18,8 +21,11 @@ May-2019
 
 import numpy as np
 import pandas as pd
-import matplotlib
-matplotlib.use('Agg')
+from sys import platform
+if platform == 'linux':
+    import matplotlib
+    matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import random
@@ -580,7 +586,7 @@ class Plot(object):
         self.solver.experiment_2_live(self.data, file_v, file_e, file_error,
                                       file_annotation, file_evol)
 
-    def generate_all(self):
+    def generate_all(self, watermark=False):
         """Generate all charts
 
         This function runs all experiments and generates all charts used in the
@@ -597,6 +603,10 @@ class Plot(object):
         print('\nGenerating Figure 3...')
         self.figure3(axis=ax3)
         print('\nDONE!')
+        if watermark:
+            font = {'color':  'gray', 'weight': 'normal', 'size': 100, 'alpha': 0.2}
+            fig.text(0.15, 0.5, 'Carlos Souza', fontdict=font)
+
         if self.save_to_file:
             fig.savefig(f'{self.images_folder}/figure.png')
         else:
@@ -609,10 +619,15 @@ if __name__ == '__main__':
                         help='Use this flag to generate DataFrames to create'
                              'video simulation. Check README.md to see how to'
                              'create the video simulation.')
+    parser.add_argument('-s', '--show', action="store_true", default=False,
+                        help='Use this flag to show image on the screen '
+                             'instead of saving it to a file.')
+    parser.add_argument('-w', '--watermark', action="store_true", default=False,
+                        help='Use this flag to create images with watermark.')
     args = parser.parse_args()
 
-    p = Plot(seed=200357)
+    p = Plot(seed=200357, save_to_file=not args.show)
     if not args.live:
-        p.generate_all()
+        p.generate_all(watermark=args.watermark)
     else:
         p.live_plot()
