@@ -11,17 +11,15 @@ used in the report. It also creates them in individual files,
 'images/figure1.png', 'images/figure2.png', and 'images/figure3.png', which are
 replications of Sutton's Figure 3, 4 and 5 respectively.
 
-Todo:
-    * Test in ubuntu
-
-Created by Carlos Souza (souza@gatech.edu). May-2019.
+Created by Carlos Souza (souza@gatech.edu)
+May-2019
 
 """
 
 import numpy as np
 import pandas as pd
-#import matplotlib
-#matplotlib.use('Agg')
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import random
