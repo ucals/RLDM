@@ -1,4 +1,9 @@
 import pandas as pd
+from sys import platform
+if platform == 'linux':
+    import matplotlib
+    matplotlib.use('Agg')
+    
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from pandas.errors import EmptyDataError

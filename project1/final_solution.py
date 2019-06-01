@@ -12,7 +12,8 @@ used in the report. It also creates them in individual files,
 replications of Sutton's Figure 3, 4 and 5 respectively.
 
 TODO:
-    * Test again in Linux (after conditional importing)
+    * Adjust random_walk illustration and text(from A to E, to be compatible
+      with video screenshot)
 
 Created by Carlos Souza (souza@gatech.edu)
 May-2019
