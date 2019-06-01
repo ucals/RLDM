@@ -145,32 +145,32 @@ We can use equations (\ref{eqn:5}) and (\ref{eqn:6}) to devise TD($\lambda$) alg
 \label{subsec:randomwalk}
 Sutton (1988) illustrates TD methods with a random-walk example, one of the simplest dynamic systems.
 A bounded random walk is a Markov Reward Process.
-The episodes always start in the middle state $D$.
+The episodes always start in the middle state $C$.
 At each time step, the walk moves to the neighbor state, either left or right, with equal probability.
-The episode ends when walk reaches either extreme states $A$ or $G$.
-If termination happens by reaching the extreme right ($G$), environment provides a reward of +1;
+The episode ends when walk reaches either extreme states ($A$'s left or $E$'s right).
+If termination happens by reaching the extreme right, environment provides a reward of +1;
 all the other rewards are zero.
 
 \begin{figure}[t]
-    \includegraphics[scale=0.3]{./images/random_walk.eps}
+    \includegraphics[scale=0.3]{./images/random_walk2.eps}
     \centering
     \caption{A bounded random walk generator used in Sutton's original paper.
-    All episodes start in state $D$.
+    All episodes start in state $C$.
     At each time step, walk has equal probability of either moving left or right.
-    Episode ends when walk reaches either $A$ or $G$.
-    In case of episode terminating in $G$, +1 reward is received;
+    Episode ends when walk reaches either extreme left or right.
+    In case of episode terminating in extreme right, +1 reward is received;
     otherwise, reward is zero.}
     \label{fig:1}
 \end{figure}
 
-A typical episode terminating in the extreme right might be the following state-reward sequence: $D, 0, C, 0, D, 0, E, 0, F, 0, G, 1$.
-An example of a walk ending in the extreme left might be: $D, 0, C, 0, B, 0, A, 0$.
+A typical episode terminating in the extreme right might be the following state-reward sequence: C, 0, B, 0, C, 0, D, 0, E, 0, extreme-right (terminal), 1.
+An example of a walk ending in the extreme left might be: C, 0, B, 0, A, 0, extreme-left (terminal), 0.
 This MRP is undiscounted ($\gamma = 1$);
 therefore, the true value of each state is the probability of terminating on the extreme right by starting from that specific state.
-Thus, the true values from all states, from $A$ to $G$ respectively, are
+Thus, the true values from all states, from $A$ to $E$ respectively, are
 
 \begin{equation}
-    v_{true} = \Bigg[0, \frac{1}{6}, \frac{2}{6}, \frac{3}{6}, \frac{4}{6}, \frac{5}{6}, 1\Bigg]
+    v_{true} = \Bigg[\frac{1}{6}, \frac{2}{6}, \frac{3}{6}, \frac{4}{6}, \frac{5}{6}\Bigg]
     \centering
 \end{equation}
 

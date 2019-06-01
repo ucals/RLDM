@@ -11,10 +11,6 @@ used in the report. It also creates them in individual files,
 'images/figure1.png', 'images/figure2.png', and 'images/figure3.png', which are
 replications of Sutton's Figure 3, 4 and 5 respectively.
 
-TODO:
-    * Adjust random_walk illustration and text(from A to E, to be compatible
-      with video screenshot)
-
 Created by Carlos Souza (souza@gatech.edu)
 May-2019
 
