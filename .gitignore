@@ -1,5 +1,6 @@
 .idea/
 out/
+*.iml
 **/*.mp4
 **/*.aux
 **/*.bbl
@@ -8,3 +9,4 @@ out/
 **/*.gz
 **/*.out
 **/.ipynb_checkpoints/
+.homeworks/

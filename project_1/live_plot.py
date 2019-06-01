@@ -1,9 +1,41 @@
+# -*- coding: utf-8 -*-
+"""OMSCS Reinforcement Learning - CS-7642-O03 - Project #1 Solution
+
+This code solves Project #1 from OMSCS Reinforcement Learning - CS-7642-O03,
+generating the video referenced in report, which can be seen in the following
+Youtube link
+
+    https://youtu.be/mBqyQpL8_Vc
+
+To re-create it, you will have to run 2 commands in parallel: i) one to capture
+the live data being produced by the simulation (and either display it in the
+screen or save it in `images/animation.mp4`), and ii) other to generate the live
+data. To do (i), first run:
+
+    $ python live_plot.py
+
+Then, to generate the live data (ii), then run in parallel:
+
+    $ python final_solution.py --live
+
+The default behaviour of `live_plot.py` program is to save the video in the file
+`images/animation.mp4`. If instead you want to see it in the screen, run
+
+    $ python live_plot --show
+
+instead.
+
+Created by Carlos Souza (souza@gatech.edu)
+May-2019
+
+"""
+
 import pandas as pd
 from sys import platform
 if platform == 'linux':
     import matplotlib
     matplotlib.use('Agg')
-    
+
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from pandas.errors import EmptyDataError
