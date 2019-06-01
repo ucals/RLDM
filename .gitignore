@@ -9,4 +9,4 @@ out/
 **/*.gz
 **/*.out
 **/.ipynb_checkpoints/
-.homeworks/
+homeworks/
