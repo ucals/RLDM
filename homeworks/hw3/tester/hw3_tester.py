@@ -28,17 +28,20 @@ class MDP:
                     self.transitions[i, state_index, new_state_index] = transition["probability"]
                     self.rewards[i, state_index, new_state_index] = transition["reward"]
 
-def get_iterations_with_mdptoolbox(mdp_descr):
+
+def get_iterations_with_mdptoolbox(mdp_descr, verbose=True):
     log.info('in get_iterations function')
     mdp = MDP(mdp_descr)
 
     log.info('running policy improvement')
     # (policy, v, it)
     results = []
-    bar = progressbar.ProgressBar(maxval=1000,
-                                  widgets=[progressbar.Bar('=', '[', ']'), ' ',
-                                           progressbar.Percentage()])
-    bar.start()
+    if verbose:
+        bar = progressbar.ProgressBar(maxval=1000,
+                                      widgets=[progressbar.Bar('=', '[', ']'), ' ',
+                                               progressbar.Percentage()])
+        bar.start()
+
     for t in range(1000):
         np.seterr(all='raise')
         try:
@@ -57,11 +60,17 @@ def get_iterations_with_mdptoolbox(mdp_descr):
         except Exception as e:
             log.error('exception: ' + e.message)
             log.error('won\'t count trial')
-        bar.update(t + 1)
-    bar.finish()
+
+        if verbose:
+            bar.update(t + 1)
+
+    if verbose:
+        bar.finish()
+
     if len(results) == 0:
         log.critical('empty results, please check for errors')
         exit(-2)
+
     results = np.array(results)
     log.info("Value function:")
     log.info(pi.V)
