@@ -9,4 +9,5 @@ out/
 **/*.gz
 **/*.out
 **/.ipynb_checkpoints/
+**/__pycache__/
 homeworks/
