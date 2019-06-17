@@ -7,9 +7,11 @@ import numpy as np
 import agent as ag
 import argparse
 import os
+import tensorflow as tf
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+tf.logging.set_verbosity(tf.logging.ERROR)
 
 
 if __name__ == '__main__':
@@ -25,7 +27,8 @@ if __name__ == '__main__':
     if args.fh:
         render = False
 
-    agent = ag.Agent(batch_size=32, layers=[512, 512])
+    agent = ag.Agent(batch_size=16, layers=[512, 512], dueling=True,
+                     double=True, prioritized_er=True)
     print(agent.Q.summary())
 
     def epsilon_decay1(curr_epsilon, i_episode, min_epsilon=0.05, decay=0.999):

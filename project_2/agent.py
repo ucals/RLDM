@@ -6,12 +6,21 @@ from statistics import mean
 from time import time
 from datetime import timedelta
 from collections import deque
-from keras.layers import Input, Dense, Add, Lambda
+from keras.layers import Input, Dense, Add, Lambda, Multiply
 from keras.models import Model, model_from_json
 from keras.optimizers import Adam
 from keras.utils import plot_model
 from keras import backend as K
 import gym
+from memory import Memory
+
+# To prioritized ER look at:
+# https://github.com/qfettes/DeepRL-Tutorials/blob/master/06.DQN_PriorityReplay.ipynb
+# https://github.com/Kyushik/DRL/blob/master/03_Prioritized_Experience_Replay.py (line 326)
+# https://github.com/txzhao/rl-zoo/blob/master/DQN/dqn.py (line 148)
+# https://github.com/jaromiru/AI-blog/blob/master/Seaquest-DDQN-PER.py (not implemented correctly)
+# https://github.com/simoninithomas/Deep_reinforcement_learning_Course/blob/master/Dueling%20Double%20DQN%20with%20PER%20and%20fixed-q%20targets/Dueling%20Deep%20Q%20Learning%20with%20Doom%20(%2B%20double%20DQNs%20and%20Prioritized%20Experience%20Replay).ipynb
+
 
 
 class Agent(object):
@@ -21,12 +30,16 @@ class Agent(object):
         self.env = gym.make('LunarLander-v2')
         self.gamma = gamma
         self.alpha = alpha
-        self.memory = deque(maxlen=memory_capacity)
         self.batch_size = batch_size
         self.Q = self.build_model(layers=layers, dueling=dueling)
         self.Q_target = self.build_model(layers=layers, dueling=dueling)
         self.double = double
-        #self.prioritized_er = prioritized_er
+        self.prioritized_er = prioritized_er
+        if prioritized_er:
+            self.memory = Memory(capacity=memory_capacity)
+        else:
+            self.memory = deque(maxlen=memory_capacity)
+
         self.tau = tau
         self.epsilon = 1.0
         self.min_epsilon = min_epsilon
@@ -35,6 +48,8 @@ class Agent(object):
     def build_model(self, layers, dueling=True, plot=True):
         inputs = Input(shape=(self.env.observation_space.shape[0], ),
                        name='input')
+        is_weigths = Input(shape=(1,), name='weigths_input')
+
         x = Dense(layers[0], activation='relu', name='dense_0')(inputs)
         for i in range(1, len(layers)):
             x = Dense(layers[i], activation='relu', name=f'dense_{i}')(x)
@@ -48,13 +63,22 @@ class Agent(object):
             out = Dense(self.env.action_space.n, activation='linear', name='q')(x)
             net_name = 'model_simple'
 
-        model = Model(inputs=inputs, outputs=out)
-        model.compile(loss='mse', optimizer=Adam(lr=self.alpha))
+        model = Model(inputs=[inputs, is_weigths], outputs=out)
+        model.compile(loss=self.custom_loss(is_weigths), optimizer=Adam(lr=self.alpha))  # loss='mse'
 
         if plot:
             plot_model(model, to_file=f'{net_name}.png', rankdir='LR')
 
         return model
+
+    def custom_loss(self, is_weights):
+        # https://towardsdatascience.com/advanced-keras-constructing-complex-custom-losses-and-metrics-c07ca130a618
+        def loss(y_true, y_pred):
+            z = Multiply()([K.square(y_pred - y_true), is_weights])
+            return K.mean(z, axis=-1)
+
+        # Return a function
+        return loss
 
     def act(self, state, explore=True):
         take_random_action = \
@@ -63,11 +87,24 @@ class Agent(object):
             return self.env.action_space.sample()
         else:
             s = np.reshape(state, (1, self.env.observation_space.shape[0]))
-            q = self.Q.predict(s)[0]
+            q = self.Q.predict([s, np.ones(1)])[0]
             return np.argmax(q)
 
     def remember(self, state, action, reward, next_state, done):
-        self.memory.append([state, action, reward, next_state, done])
+        if self.prioritized_er:
+            s = np.reshape(state, (1, self.env.observation_space.shape[0]))
+            old_q = self.Q.predict([s, np.ones(1)])[0][action]
+            s_next = np.reshape(next_state, (1, self.env.observation_space.shape[0]))
+            q_t_next = self.Q_target.predict([s_next, np.ones(1)])
+            if done:
+                new_q = reward
+            else:
+                new_q = reward + self.gamma * np.max(q_t_next)
+
+            error = abs(old_q - new_q)
+            self.memory.add(error, (state, action, reward, next_state, done))
+        else:
+            self.memory.append([state, action, reward, next_state, done])
 
     def update_target_weights(self):
         online_weights = self.Q.get_weights()
@@ -107,7 +144,7 @@ class Agent(object):
             s_next = np.vstack(mem[selected_rows, 3])
             d = mem[selected_rows, 4].astype(int)
 
-            y = self.Q_target.predict(s)
+            y = self.Q.predict(s)  # Q_target
             q_t_next = self.Q_target.predict(s_next)
 
             if self.double:
@@ -124,16 +161,20 @@ class Agent(object):
 
     def experience_replay(self):
         if len(self.memory) >= self.batch_size:
-            batch = random.sample(self.memory, self.batch_size)
+            if self.prioritized_er:
+                batch, idxs, is_weights = self.memory.sample(self.batch_size)
+            else:
+                batch = random.sample(self.memory, self.batch_size)
+                is_weights = np.ones(self.batch_size)
 
             s_next = np.vstack([item[3] for item in batch])
-            q_o_next = self.Q.predict(s_next)
+            q_o_next = self.Q.predict([s_next, np.ones(self.batch_size)])
             a_next = [np.argmax(qn) for qn in q_o_next]
 
-            q_t_next = self.Q_target.predict(s_next)
+            q_t_next = self.Q_target.predict([s_next, np.ones(self.batch_size)])
 
             s = np.vstack([item[0] for item in batch])
-            q = self.Q_target.predict(s)
+            q = self.Q.predict([s, np.ones(self.batch_size)])
 
             for i, (state, action, reward, next_state, done) in enumerate(batch):
                 if done:
@@ -144,9 +185,13 @@ class Agent(object):
                     else:
                         new_q = reward + self.gamma * np.max(q_t_next[i])
 
+                error = abs(q[i][action] - new_q)
                 q[i][action] = new_q
 
-            self.Q.fit(s, q, batch_size=len(batch), verbose=0)
+                if self.prioritized_er:
+                    self.memory.update(idxs[i], error)
+
+            self.Q.fit([s, is_weights], q, batch_size=len(batch), verbose=0)
 
     def train(self, epsilon_decay, num_episodes=10000, runs_to_solve=100,
               max_t=1000, avg_solve_reward=200.0, freq_update_target=100,
@@ -189,7 +234,7 @@ class Agent(object):
             episode_time = time() - t
 
             # Record avg state values
-            q_values = self.Q.predict(np.array(states))
+            q_values = self.Q.predict([np.array(states), np.ones(len(states))])
 
             # Check score
             if i_episode >= 0 and print_same_line:
