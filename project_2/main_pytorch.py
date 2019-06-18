@@ -22,7 +22,7 @@ if __name__ == '__main__':
         render = False
 
     agent = ag.Agent(batch_size=32, layers=[512, 512], dueling=True,
-                     double=True, alpha=0.0025, prioritized_er=True)
+                     double=True, alpha=0.00025, prioritized_er=True)
     print(agent.Q)
 
     def epsilon_decay1(curr_epsilon, i_episode, min_epsilon=0.05, decay=0.999):

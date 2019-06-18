@@ -35,7 +35,7 @@ class Agent(object):
         self.min_epsilon = min_epsilon
 
         # self.loss_fn = nn.MSELoss()  # nn.SmoothL1Loss()
-        self.optimizer = torch.optim.SGD(self.Q.parameters(), lr=self.alpha)
+        self.optimizer = torch.optim.RMSprop(self.Q.parameters(), lr=self.alpha)
         self.update_target_weights()
 
     def build_model(self, layers, dueling=True, plot=True):
@@ -85,6 +85,7 @@ class Agent(object):
         self.Q.eval()
 
     def experience_replay_vectorized(self):
+        # TODO update accordingly to experience_replay
         if len(self.memory) >= self.batch_size:
             selected_rows = np.random.choice(len(self.memory),
                                              size=self.batch_size,
@@ -130,7 +131,8 @@ class Agent(object):
                     y[i][a] = r + self.gamma * np.max(q_t[i])
 
             # Perform a gradient descent step
-            #loss = self.loss_fn(torch.from_numpy(y), self.Q(states))
+            # TODO implement Huber Loss:
+            # https://github.com/pytorch/pytorch/blob/master/torch/nn/functional.py (line 2178)
             if self.prioritized_er:
                 loss = (is_weights * ((torch.from_numpy(y) - self.Q(states)) ** 2)).mean()
             else:
