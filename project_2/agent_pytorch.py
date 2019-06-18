@@ -40,10 +40,10 @@ class Agent(object):
 
     def build_model(self, layers, dueling=True, plot=True):
         if dueling:
-            return DuelingDQN(self.env.observation_space.shape[0], layers[0],
+            return DuelingDQN(self.env.observation_space.shape[0], layers,
                               self.env.action_space.n)
         else:
-            return DQN(self.env.observation_space.shape[0], layers[0],
+            return DQN(self.env.observation_space.shape[0], layers,
                        self.env.action_space.n)
 
     def count_parameters(self):
@@ -146,18 +146,18 @@ class Agent(object):
         states = torch.stack([torch.from_numpy(st) for st in list_of_states]).float()
         return self.Q(states).detach().numpy()
 
-    def train(self, epsilon_decay, num_episodes=10000, runs_to_solve=100,
+    def train(self, epsilon_decay, max_episodes=10000, runs_to_solve=100,
               max_t=1000, avg_solve_reward=200.0, freq_update_target=100,
               render=False, print_same_line=True, log_floydhub=False,
               stop_when_solved=True, score_filename='live_score.csv',
-              vectorized=False):
+              vectorized=False, print_frequency=1):
         scores = deque(maxlen=runs_to_solve)
         df_scores = pd.DataFrame(columns=['episode', 'epsilon', 'score',
                                           'average', 'avg_q_values'])
         t_start = time()
         best_score = float('-inf')
 
-        for i_episode in range(num_episodes):
+        for i_episode in range(max_episodes):
             t = time()
             state = self.env.reset()
             points = 0
@@ -203,13 +203,14 @@ class Agent(object):
                                         np.mean(q_values)]
             df_scores.to_csv(score_filename, index=False)
             if not log_floydhub:
-                print(f'Episode {i_episode}: {int(points)} score '
-                      f'(epsilon: {self.epsilon:0.3f}, steps: {i + 1}, '
-                      f'memory size: {len(self.memory)}, '
-                      f'episode time: {episode_time:0.3f})')
-                print(f'Past {len(scores)} runs: min {min(scores):0.0f}, '
-                      f'max {max(scores):0.0f}, avg {mean(scores):0.1f}; '
-                      f'Best score: {best_score:0.1f}')
+                if i_episode % print_frequency == 0:
+                    print(f'Episode {i_episode}: {int(points)} score '
+                          f'(epsilon: {self.epsilon:0.3f}, steps: {i + 1}, '
+                          f'memory size: {len(self.memory)}, '
+                          f'episode time: {episode_time:0.3f})')
+                    print(f'Past {len(scores)} runs: min {min(scores):0.0f}, '
+                          f'max {max(scores):0.0f}, avg {mean(scores):0.1f}; '
+                          f'Best score: {best_score:0.1f}')
             else:
                 print(f'{{"metric": "average_score", "value": {mean(scores):0.3f}, '
                       f'"epoch": {int(i_episode)}}}')
@@ -246,3 +247,5 @@ class Agent(object):
                       f'start: {timedelta(seconds=time() - t_start)}')
                 self.save_model()
                 print('\n\n')
+
+        return df_scores
