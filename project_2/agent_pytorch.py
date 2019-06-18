@@ -1,3 +1,5 @@
+import torch
+import torch.nn as nn
 import random
 import sys
 import numpy as np
@@ -6,26 +8,14 @@ from statistics import mean
 from time import time
 from datetime import timedelta
 from collections import deque
-from keras.layers import Input, Dense, Add, Lambda, Multiply
-from keras.models import Model, model_from_json
-from keras.optimizers import Adam
-from keras.utils import plot_model
-from keras import backend as K
 import gym
 from memory import Memory
-
-# To prioritized ER look at:
-# https://github.com/qfettes/DeepRL-Tutorials/blob/master/06.DQN_PriorityReplay.ipynb
-# https://github.com/Kyushik/DRL/blob/master/03_Prioritized_Experience_Replay.py (line 326)
-# https://github.com/txzhao/rl-zoo/blob/master/DQN/dqn.py (line 148)
-# https://github.com/jaromiru/AI-blog/blob/master/Seaquest-DDQN-PER.py (not implemented correctly)
-# https://github.com/simoninithomas/Deep_reinforcement_learning_Course/blob/master/Dueling%20Double%20DQN%20with%20PER%20and%20fixed-q%20targets/Dueling%20Deep%20Q%20Learning%20with%20Doom%20(%2B%20double%20DQNs%20and%20Prioritized%20Experience%20Replay).ipynb
-
+from torch_networks import DQN, DuelingDQN
 
 
 class Agent(object):
     def __init__(self, gamma=0.99, alpha=0.0005, memory_capacity=10000,
-                 batch_size=64, layers=[256, 256], dueling=True, double=True,
+                 batch_size=64, layers=[512, 512], dueling=True, double=True,
                  prioritized_er=False, tau=1.0, min_epsilon=0.05):
         self.env = gym.make('LunarLander-v2')
         self.gamma = gamma
@@ -43,42 +33,21 @@ class Agent(object):
         self.tau = tau
         self.epsilon = 1.0
         self.min_epsilon = min_epsilon
+
+        # self.loss_fn = nn.MSELoss()  # nn.SmoothL1Loss()
+        self.optimizer = torch.optim.SGD(self.Q.parameters(), lr=self.alpha)
         self.update_target_weights()
 
     def build_model(self, layers, dueling=True, plot=True):
-        inputs = Input(shape=(self.env.observation_space.shape[0], ),
-                       name='input')
-        is_weigths = Input(shape=(1,), name='weigths_input')
-
-        x = Dense(layers[0], activation='relu', name='dense_0')(inputs)
-        for i in range(1, len(layers)):
-            x = Dense(layers[i], activation='relu', name=f'dense_{i}')(x)
-
         if dueling:
-            v = Dense(1, activation=None, name='v')(x)
-            a = Dense(self.env.action_space.n, activation=None, name='a')(x)
-            out = Lambda(lambda x: x[0] + (x[1] - K.mean(x[1])), name='q')([v, a])
-            net_name = 'model_dueling'
+            return DuelingDQN(self.env.observation_space.shape[0], layers[0],
+                              self.env.action_space.n)
         else:
-            out = Dense(self.env.action_space.n, activation='linear', name='q')(x)
-            net_name = 'model_simple'
+            return DQN(self.env.observation_space.shape[0], layers[0],
+                       self.env.action_space.n)
 
-        model = Model(inputs=[inputs, is_weigths], outputs=out)
-        model.compile(loss=self.custom_loss(is_weigths), optimizer=Adam(lr=self.alpha))  # loss='mse'
-
-        if plot:
-            plot_model(model, to_file=f'{net_name}.png', rankdir='LR')
-
-        return model
-
-    def custom_loss(self, is_weights):
-        # https://towardsdatascience.com/advanced-keras-constructing-complex-custom-losses-and-metrics-c07ca130a618
-        def loss(y_true, y_pred):
-            z = Multiply()([K.square(y_pred - y_true), is_weights])
-            return K.mean(z, axis=-1)
-
-        # Return a function
-        return loss
+    def count_parameters(self):
+        return sum(p.numel() for p in self.Q.parameters() if p.requires_grad)
 
     def act(self, state, explore=True):
         take_random_action = \
@@ -86,16 +55,15 @@ class Agent(object):
         if take_random_action and explore:
             return self.env.action_space.sample()
         else:
-            s = np.reshape(state, (1, self.env.observation_space.shape[0]))
-            q = self.Q.predict([s, np.ones(1)])[0]
-            return np.argmax(q)
+            st = torch.from_numpy(state).float().unsqueeze(0)
+            return torch.argmax(self.Q(st)).item()
 
     def remember(self, state, action, reward, next_state, done):
         if self.prioritized_er:
-            s = np.reshape(state, (1, self.env.observation_space.shape[0]))
-            old_q = self.Q.predict([s, np.ones(1)])[0][action]
-            s_next = np.reshape(next_state, (1, self.env.observation_space.shape[0]))
-            q_t_next = self.Q_target.predict([s_next, np.ones(1)])
+            st = torch.from_numpy(state).float().unsqueeze(0)
+            old_q = self.Q(st).detach().numpy()[0][action]
+            st_next = torch.from_numpy(next_state).float().unsqueeze(0)
+            q_t_next = self.Q_target(st_next).detach().numpy()[0]
             if done:
                 new_q = reward
             else:
@@ -107,30 +75,14 @@ class Agent(object):
             self.memory.append([state, action, reward, next_state, done])
 
     def update_target_weights(self):
-        online_weights = self.Q.get_weights()
-        target_weights = self.Q_target.get_weights()
-        for i, ow in enumerate(online_weights):
-            target_weights[i] = (1 - self.tau) * target_weights[i] + self.tau * ow
+        self.Q_target.load_state_dict(self.Q.state_dict())
 
-        self.Q_target.set_weights(target_weights)
+    def save_model(self, filename='model.torch'):
+        torch.save(self.Q.state_dict(), filename)
 
-    def save_model(self, filename='model'):
-        model_json = self.Q.to_json()
-        with open(f"{filename}.json", "w") as json_file:
-            json_file.write(model_json)
-
-        self.Q.save_weights(f"{filename}.h5")
-        print(f'Model saved in "{filename}.json"", weights saved in '
-              f'"{filename}.h5".')
-
-    def load_model(self, filename='model'):
-        json_file = open(f'{filename}.json', 'r')
-        loaded_model_json = json_file.read()
-        json_file.close()
-        self.Q = model_from_json(loaded_model_json)
-        self.Q_target = model_from_json(loaded_model_json)
-        self.Q.load_weights(f"{filename}.h5")
-        self.Q_target.load_weights(f"{filename}.h5")
+    def load_model(self, filename='model.torch'):
+        self.Q.load_state_dict(torch.load(filename))
+        self.Q.eval()
 
     def experience_replay_vectorized(self):
         if len(self.memory) >= self.batch_size:
@@ -144,54 +96,53 @@ class Agent(object):
             s_next = np.vstack(mem[selected_rows, 3])
             d = mem[selected_rows, 4].astype(int)
 
-            y = self.Q.predict(s)  # Q_target
-            q_t_next = self.Q_target.predict(s_next)
+            y = self.Q(torch.from_numpy(s).float()).detach().numpy()
+            q_next_t = self.Q_target(torch.from_numpy(s_next).float()).detach().numpy()
+            q_next_o = self.Q(torch.from_numpy(s_next).float()).detach().numpy()
 
-            if self.double:
-                q_o_next = self.Q.predict(s_next)
-                a_next = np.argmax(q_o_next, axis=1)
-                y[np.arange(y.shape[0]), a] = r + self.gamma * \
-                                              q_t_next[np.arange(y.shape[0]),
-                                                       a_next] * (1 - d)
-            else:
-                y[np.arange(y.shape[0]), a] = r + self.gamma * \
-                                              np.max(q_t_next, axis=1) * (1 - d)
+            amax = np.argmax(q_next_o, axis=1)
+            y[np.arange(y.shape[0]), a] = r + self.gamma * q_next_t[np.arange(y.shape[0]), amax] * (1 - d)
 
-            self.Q.fit(s, y, verbose=0)
+            # Perform a gradient descent step
+            loss = self.loss_fn(torch.from_numpy(y), self.Q(torch.from_numpy(s).float()))
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
 
     def experience_replay(self):
         if len(self.memory) >= self.batch_size:
             if self.prioritized_er:
                 batch, idxs, is_weights = self.memory.sample(self.batch_size)
+                is_weights = torch.from_numpy(is_weights).float().view((self.batch_size, 1))
             else:
                 batch = random.sample(self.memory, self.batch_size)
-                is_weights = np.ones(self.batch_size)
 
-            s_next = np.vstack([item[3] for item in batch])
-            q_o_next = self.Q.predict([s_next, np.ones(self.batch_size)])
-            a_next = [np.argmax(qn) for qn in q_o_next]
+            states = torch.stack([torch.from_numpy(i[0]) for i in batch]).float()
+            y = self.Q(states).detach().numpy()
+            next_states = torch.stack([torch.from_numpy(i[3]) for i in batch]).float()
+            q_t = self.Q_target(next_states).detach().numpy()
 
-            q_t_next = self.Q_target.predict([s_next, np.ones(self.batch_size)])
-
-            s = np.vstack([item[0] for item in batch])
-            q = self.Q.predict([s, np.ones(self.batch_size)])
-
-            for i, (state, action, reward, next_state, done) in enumerate(batch):
-                if done:
-                    new_q = reward
+            # Do Q-learning update
+            for i, (s, a, r, s_p, d) in enumerate(batch):
+                if d:
+                    y[i][a] = r
                 else:
-                    if self.double:
-                        new_q = reward + self.gamma * q_t_next[i][a_next[i]]
-                    else:
-                        new_q = reward + self.gamma * np.max(q_t_next[i])
+                    y[i][a] = r + self.gamma * np.max(q_t[i])
 
-                error = abs(q[i][action] - new_q)
-                q[i][action] = new_q
+            # Perform a gradient descent step
+            #loss = self.loss_fn(torch.from_numpy(y), self.Q(states))
+            if self.prioritized_er:
+                loss = (is_weights * ((torch.from_numpy(y) - self.Q(states)) ** 2)).mean()
+            else:
+                loss = ((torch.from_numpy(y) - self.Q(states)) ** 2).mean()
 
-                if self.prioritized_er:
-                    self.memory.update(idxs[i], error)
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
 
-            self.Q.fit([s, is_weights], q, batch_size=len(batch), verbose=0)
+    def predict_Q_values(self, list_of_states):
+        states = torch.stack([torch.from_numpy(st) for st in list_of_states]).float()
+        return self.Q(states).detach().numpy()
 
     def train(self, epsilon_decay, num_episodes=10000, runs_to_solve=100,
               max_t=1000, avg_solve_reward=200.0, freq_update_target=100,
@@ -234,7 +185,7 @@ class Agent(object):
             episode_time = time() - t
 
             # Record avg state values
-            q_values = self.Q.predict([np.array(states), np.ones(len(states))])
+            q_values = self.predict_Q_values(states)
 
             # Check score
             if i_episode >= 0 and print_same_line:

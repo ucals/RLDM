@@ -27,11 +27,11 @@ def plot_avg_scores(ax, df):
         ax.axhline(195, color='red', linewidth=0.8, linestyle='--')
 
 
-def annotate_info(ax, df, position=(0.02, 0.9)):
-    info = f"Episode {df['episode'].iloc[-1]:.0f}: " \
+def annotate_info(ax, df, position=(0.02, 0.9), window=100):
+    info = f"Episode {df['episode'].iloc[-1] + 1:.0f}: " \
         f"score {df['score'].iloc[-1]:.0f}, " \
         f"epsilon {df['epsilon'].iloc[-1]:0.3f} \n" \
-        f"Past {df.shape[0]} runs: " \
+        f"Past {window} runs: " \
         f"min {df['score'].tail(100).min():.0f}, " \
         f"max {df['score'].tail(100).max():.0f}, " \
         f"avg {df['score'].tail(100).mean():.0f}"
@@ -100,8 +100,9 @@ def animate(i, filename, window):
         #plot_scores(ax2, df)
         plot_scores_and_avg(ax1, df)
         plot_epsilon(ax3, df)
-        annotate_info(ax1, df, position=(0.5, 0.02))
+        annotate_info(ax1, df, position=(0.5, 0.02), window=100)
         plt.subplots_adjust(hspace=0.4, wspace=0.3)
+
     except EmptyDataError:
         pass
 
@@ -112,9 +113,14 @@ if __name__ == '__main__':
                         help='csv filename with scores')
     parser.add_argument('-w', '--window', metavar='w', type=int,
                         help='window to plot')
+    parser.add_argument('-m', '--watermark', action='store_true',
+                        help='plot with watermark')
     args = parser.parse_args()
 
-    #window = 100
+    if args.watermark:
+        font = {'color':  'gray', 'weight': 'normal', 'size': 80, 'alpha': 0.2}
+        fig.text(0.15, 0.6, 'Carlos Souza', fontdict=font)
+
     ani = animation.FuncAnimation(fig, animate, interval=2000,
                                   fargs=(args.filename, args.window, ))
     plt.show()
