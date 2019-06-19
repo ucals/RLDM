@@ -156,14 +156,15 @@ class Agent(object):
 
     def train(self, epsilon_decay, max_episodes=10000, runs_to_solve=100,
               max_t=1000, avg_solve_reward=200.0, freq_update_target=100,
-              render=False, print_same_line=True, log_floydhub=False,
-              stop_when_solved=True, score_filename='live_score.csv',
-              vectorized=False, print_frequency=1):
+              render=False, print_same_line=True, print_frequency=1,
+              log_floydhub=False, stop_when_solved=True, keep_learning=False,
+              score_filename='live_score.csv', vectorized=False):
         scores = deque(maxlen=runs_to_solve)
         df_scores = pd.DataFrame(columns=['episode', 'epsilon', 'score',
                                           'average', 'avg_q_values'])
         t_start = time()
         best_score = float('-inf')
+        solved = False
 
         for i_episode in range(max_episodes):
             t = time()
@@ -177,32 +178,32 @@ class Agent(object):
                 action = self.act(state)
                 next_state, reward, done, info = self.env.step(action)
                 points += reward
-                self.remember(state, action, reward, next_state, done)
+                if (not solved) or (solved and keep_learning):
+                    self.remember(state, action, reward, next_state, done)
+
                 state = next_state
                 states.append(state)
-                if vectorized:
-                    self.experience_replay_vectorized()
-                else:
-                    self.experience_replay()
 
-                self.epsilon = epsilon_decay(self.epsilon, i_episode)
-                if i % freq_update_target == 0:
-                    self.update_target_weights()
+                if (not solved) or (solved and keep_learning):
+                    if vectorized:
+                        self.experience_replay_vectorized()
+                    else:
+                        self.experience_replay()
+
+                    self.epsilon = epsilon_decay(self.epsilon, i_episode)
+                    if i % freq_update_target == 0:
+                        self.update_target_weights()
+                else:
+                    self.epsilon = 0
 
                 if done:
                     break
 
             episode_time = time() - t
 
-            # Record avg state values
+            # Record score, state values and data from episode
             q_values = self.predict_Q_values(states)
-
-            # Check score
-            if i_episode >= 0 and print_same_line:
-                sys.stdout.write(b'\033[2A'.decode())
-
             scores.append(points)
-
             if mean(scores) > best_score:
                 best_score = mean(scores)
 
@@ -210,37 +211,24 @@ class Agent(object):
                                         int(points), mean(scores),
                                         np.mean(q_values)]
             df_scores.to_csv(score_filename, index=False)
-            if not log_floydhub:
-                if i_episode % print_frequency == 0:
-                    print(f'Episode {i_episode}: {int(points)} score '
-                          f'(epsilon: {self.epsilon:0.3f}, steps: {i + 1}, '
-                          f'memory size: {len(self.memory)}, '
-                          f'episode time: {episode_time:0.3f})')
-                    print(f'Past {len(scores)} runs: min {min(scores):0.0f}, '
-                          f'max {max(scores):0.0f}, avg {mean(scores):0.1f}; '
-                          f'Best score: {best_score:0.1f}')
-            else:
-                print(f'{{"metric": "average_score", "value": {mean(scores):0.3f}, '
-                      f'"epoch": {int(i_episode)}}}')
-                print(f'{{"metric": "score", "value": {points:0.3f}, '
-                      f'"epoch": {int(i_episode)}}}')
-                print(f'{{"metric": "epsilon", "value": {self.epsilon:0.3f}, '
-                      f'"epoch": {int(i_episode)}}}')
-                print(f'{{"metric": "average_q_value", '
-                      f'"value": {np.mean(q_values):0.3f}, '
-                      f'"epoch": {int(i_episode)}}}')
-                print(f'{{"metric": "steps_until_done", '
-                      f'"value": {i + 1}, "epoch": {int(i_episode)}}}')
-                print(f'{{"metric": "episode_time", '
-                      f'"value": {episode_time:0.3f}, "epoch": {int(i_episode)}}}')
-                print(f'{{"metric": "memory_size", '
-                      f'"value": {len(self.memory)}, "epoch": {int(i_episode)}}}')
-                print(f'{{"metric": "best_score", '
-                      f'"value": {best_score:0.3f}, "epoch": {int(i_episode)}}}')
+
+            # Log data in-screen
+            if i_episode >= 0 and print_same_line:
+                sys.stdout.write(b'\033[2A'.decode())
+
+            if (i_episode + 1) % print_frequency == 0:
+                self.log(i_episode, episode_time, scores, best_score, q_values,
+                         i + 1, compact=not print_same_line,
+                         log_floydhub=log_floydhub)
 
             # Register first time agent solves
             if (mean(scores) >= avg_solve_reward) and stop_when_solved:
-                print(f'\nSolved in {i_episode + 1} total episodes. Time to '
+                if (i_episode + 1) % print_frequency != 0:
+                    self.log(i_episode, episode_time, scores, best_score,
+                             q_values, i + 1, compact=not print_same_line,
+                             log_floydhub=log_floydhub)
+
+                print(f'Solved in {i_episode + 1} total episodes. Time to '
                       f'solve: {timedelta(seconds=time() - t_start)}')
                 self.save_model()
                 break
@@ -248,10 +236,11 @@ class Agent(object):
             # If training until maximum number of episodes, keep improving
             if (mean(scores) >= avg_solve_reward) and (mean(scores) >= best_score) \
                     and not stop_when_solved:
+                solved = True
                 best_score = mean(scores)
                 best_score_episode = i_episode + 1
-                if print_same_line:
-                    print(' ')
+                #if print_same_line:
+                #    print(' ')
                 print(f'New best score found: {best_score:0.3f} in '
                       f'{best_score_episode} total episodes. Time since '
                       f'start: {timedelta(seconds=time() - t_start)}')
@@ -260,3 +249,37 @@ class Agent(object):
                     print('\n\n')
 
         return df_scores
+
+    def log(self, i_episode, episode_time, scores, best_score, q_values,
+            steps_until_done, compact=False, log_floydhub=False):
+        if not log_floydhub:
+            if compact:
+                print(f'Episode {i_episode + 1:>3}: {int(scores[-1]):>4} score\t\t'
+                      f'<avg, min, max> past {len(scores):>3} runs: '
+                      f'{mean(scores):0.1f}, {min(scores):0.0f}, {max(scores):0.0f}')
+            else:
+                print(f'Episode {i_episode + 1}: {int(scores[-1])} score '
+                      f'(epsilon: {self.epsilon:0.3f}, steps: {steps_until_done}, '
+                      f'memory size: {len(self.memory)}, '
+                      f'episode time: {episode_time:0.3f})')
+                print(f'Past {len(scores)} runs: min {min(scores):0.0f}, '
+                      f'max {max(scores):0.0f}, avg {mean(scores):0.1f}; '
+                      f'Best score: {best_score:0.1f}')
+        else:
+            print(f'{{"metric": "average_score", "value": {mean(scores):0.3f}, '
+                  f'"epoch": {int(i_episode)}}}')
+            print(f'{{"metric": "score", "value": {scores[-1]:0.3f}, '
+                  f'"epoch": {int(i_episode)}}}')
+            print(f'{{"metric": "epsilon", "value": {self.epsilon:0.3f}, '
+                  f'"epoch": {int(i_episode)}}}')
+            print(f'{{"metric": "average_q_value", '
+                  f'"value": {np.mean(q_values):0.3f}, '
+                  f'"epoch": {int(i_episode)}}}')
+            print(f'{{"metric": "steps_until_done", '
+                  f'"value": {steps_until_done}, "epoch": {int(i_episode)}}}')
+            print(f'{{"metric": "episode_time", '
+                  f'"value": {episode_time:0.3f}, "epoch": {int(i_episode)}}}')
+            print(f'{{"metric": "memory_size", '
+                  f'"value": {len(self.memory)}, "epoch": {int(i_episode)}}}')
+            print(f'{{"metric": "best_score", '
+                  f'"value": {best_score:0.3f}, "epoch": {int(i_episode)}}}')
