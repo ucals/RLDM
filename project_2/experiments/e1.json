@@ -32,14 +32,14 @@
         }
     ],
     "global_params": {
-        "runs_per_experiment": 10,
+        "runs_per_experiment": 3,
         "batch_size": 32,
         "layers": [
             512,
             512
         ],
         "alpha": 0.00025,
-        "max_episodes": 1000,
+        "max_episodes": 10,
         "stop_when_solved": false
     }
 }

@@ -16,7 +16,7 @@ from torch_networks import DQN, DuelingDQN
 class Agent(object):
     def __init__(self, gamma=0.99, alpha=0.0005, memory_capacity=10000,
                  batch_size=64, layers=[512, 512], dueling=True, double=True,
-                 prioritized_er=False, tau=1.0, min_epsilon=0.05):
+                 prioritized_er=False, tau=1.0, min_epsilon=0.05, huber=False):
         self.env = gym.make('LunarLander-v2')
         self.gamma = gamma
         self.alpha = alpha
@@ -34,7 +34,7 @@ class Agent(object):
         self.epsilon = 1.0
         self.min_epsilon = min_epsilon
 
-        # self.loss_fn = nn.MSELoss()  # nn.SmoothL1Loss()
+        self.huber = huber
         self.optimizer = torch.optim.RMSprop(self.Q.parameters(), lr=self.alpha)
         self.update_target_weights()
 
@@ -131,12 +131,20 @@ class Agent(object):
                     y[i][a] = r + self.gamma * np.max(q_t[i])
 
             # Perform a gradient descent step
-            # TODO implement Huber Loss:
-            # https://github.com/pytorch/pytorch/blob/master/torch/nn/functional.py (line 2178)
+            target = torch.from_numpy(y)
+            old = self.Q(states)
             if self.prioritized_er:
-                loss = (is_weights * ((torch.from_numpy(y) - self.Q(states)) ** 2)).mean()
+                if self.huber:
+                    t = torch.abs(target - old)
+                    loss = (is_weights * torch.where(t < 1, 0.5 * t ** 2, t - 0.5)).mean()
+                else:
+                    loss = (is_weights * ((target - old) ** 2)).mean()
             else:
-                loss = ((torch.from_numpy(y) - self.Q(states)) ** 2).mean()
+                if self.huber:
+                    t = torch.abs(target - old)
+                    loss = torch.where(t < 1, 0.5 * t ** 2, t - 0.5)
+                else:
+                    loss = ((target - old) ** 2).mean()
 
             self.optimizer.zero_grad()
             loss.backward()
@@ -242,10 +250,13 @@ class Agent(object):
                     and not stop_when_solved:
                 best_score = mean(scores)
                 best_score_episode = i_episode + 1
-                print(f'\nNew best score found: {best_score:0.3f} in '
+                if print_same_line:
+                    print(' ')
+                print(f'New best score found: {best_score:0.3f} in '
                       f'{best_score_episode} total episodes. Time since '
                       f'start: {timedelta(seconds=time() - t_start)}')
                 self.save_model()
-                print('\n\n')
+                if print_same_line:
+                    print('\n\n')
 
         return df_scores

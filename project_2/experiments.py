@@ -24,11 +24,11 @@ if __name__ == '__main__':
             {'id': 'e', 'dueling': False, 'double': False, 'prioritized_er': True}
         ],
         'global_params': {
-            'runs_per_experiment': 10,
+            'runs_per_experiment': 20,
             'batch_size': 32,
             'layers': [512, 512],
-            'alpha': 0.00025,
-            'max_episodes': 1000,
+            'alpha': 0.0001,
+            'max_episodes': 500,
             'stop_when_solved': False
         }
     }
@@ -43,6 +43,7 @@ if __name__ == '__main__':
     t_start = time()
     for i, experiment in enumerate(protocol['experiments']):
         for j in range(protocol['global_params']['runs_per_experiment']):
+            t_run_start = time()
             print(f'Experiment {experiment["id"]}: {i + 1}/{len(protocol["experiments"])}:')
             print(f'Run {j + 1}/{protocol["global_params"]["runs_per_experiment"]}:')
 
@@ -64,8 +65,8 @@ if __name__ == '__main__':
             df_scores.columns = [f'{c}_{experiment["id"]}_run_{j + 1}'
                                  for c in df_scores.columns]
             frames.append(df_scores)
-            print(' ')
+            print(f'Time to complete run: {timedelta(seconds=time() - t_run_start)}\n')
 
     df_experiment = pd.concat(frames, axis=1)
-    df_experiment.to_csv(f'{experiment_name}.csv')
-    print(f'\n\nTime to complete: {timedelta(seconds=time() - t_start)}')
+    df_experiment.to_csv(f'experiments/{experiment_name}.csv')
+    print(f'Time to complete experiment: {timedelta(seconds=time() - t_start)}')

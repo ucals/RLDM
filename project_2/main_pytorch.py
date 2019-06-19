@@ -22,7 +22,7 @@ if __name__ == '__main__':
         render = False
 
     agent = ag.Agent(batch_size=32, layers=[512, 512], dueling=True,
-                     double=True, alpha=0.00025, prioritized_er=True)
+                     double=True, alpha=0.0001, prioritized_er=True)  # alpha=0.00025
     print(agent.Q)
 
     def epsilon_decay1(curr_epsilon, i_episode, min_epsilon=0.05, decay=0.999):
@@ -36,4 +36,5 @@ if __name__ == '__main__':
     print(' ')
 
     agent.train(epsilon_decay=epsilon_decay2, render=render,
-                print_same_line=not args.fh, log_floydhub=args.fh)
+                print_same_line=not args.fh, log_floydhub=args.fh,
+                score_filename='live_score1.csv')
