@@ -35,7 +35,7 @@ if __name__ == '__main__':
     print(vars(agent))
     print('\n')
 
-    agent.train(epsilon_decay=epsilon_decay2, render=render, print_frequency=1,
-                print_same_line=True, log_floydhub=args.fh,  #  print_same_line=not args.fh
+    agent.train(epsilon_decay=epsilon_decay2, render=render, print_frequency=10,
+                print_same_line=False, log_floydhub=args.fh,  #  print_same_line=not args.fh
                 score_filename='live_score1.csv', stop_when_solved=False,
                 keep_learning=False, max_episodes=1000)

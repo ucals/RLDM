@@ -156,7 +156,7 @@ class Agent(object):
 
     def train(self, epsilon_decay, max_episodes=10000, runs_to_solve=100,
               max_t=1000, avg_solve_reward=200.0, freq_update_target=100,
-              render=False, print_same_line=True, print_frequency=1,
+              render=False, print_same_line=True, print_frequency=1, run_n='',
               log_floydhub=False, stop_when_solved=True, keep_learning=False,
               score_filename='live_score.csv', vectorized=False):
         scores = deque(maxlen=runs_to_solve)
@@ -218,7 +218,7 @@ class Agent(object):
 
             if (i_episode + 1) % print_frequency == 0:
                 self.log(i_episode, episode_time, scores, best_score, q_values,
-                         i + 1, compact=not print_same_line,
+                         i + 1, compact=not print_same_line, run_n=run_n,
                          log_floydhub=log_floydhub)
 
             # Register first time agent solves
@@ -226,10 +226,10 @@ class Agent(object):
                 if (i_episode + 1) % print_frequency != 0:
                     self.log(i_episode, episode_time, scores, best_score,
                              q_values, i + 1, compact=not print_same_line,
-                             log_floydhub=log_floydhub)
+                             run_n=run_n, log_floydhub=log_floydhub)
 
-                print(f'Solved in {i_episode + 1} total episodes. Time to '
-                      f'solve: {timedelta(seconds=time() - t_start)}')
+                print(f'{run_n} \tSolved in {i_episode + 1} total '
+                      f'episodes. Training time: {timedelta(seconds=time() - t_start)}')
                 self.save_model()
                 break
 
@@ -238,23 +238,21 @@ class Agent(object):
                     and not stop_when_solved:
                 solved = True
                 best_score = mean(scores)
-                best_score_episode = i_episode + 1
-                #if print_same_line:
-                #    print(' ')
-                print(f'New best score found: {best_score:0.3f} in '
-                      f'{best_score_episode} total episodes. Time since '
-                      f'start: {timedelta(seconds=time() - t_start)}')
                 self.save_model()
+                print(f'{run_n}\tEpisode {i_episode + 1:>3}: New best score\t\t'
+                      f'past {len(scores):>3} runs avg: {best_score:0.1f}')
+
                 if print_same_line:
                     print('\n\n')
 
         return df_scores
 
     def log(self, i_episode, episode_time, scores, best_score, q_values,
-            steps_until_done, compact=False, log_floydhub=False):
+            steps_until_done, compact=False, run_n='', log_floydhub=False):
         if not log_floydhub:
             if compact:
-                print(f'Episode {i_episode + 1:>3}: {int(scores[-1]):>4} score\t\t'
+                print(f'{run_n} \tEpisode {i_episode + 1:>3}: '
+                      f'{int(scores[-1]):>4} score\t\t'
                       f'<avg, min, max> past {len(scores):>3} runs: '
                       f'{mean(scores):0.1f}, {min(scores):0.0f}, {max(scores):0.0f}')
             else:
