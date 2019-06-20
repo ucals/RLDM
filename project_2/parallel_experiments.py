@@ -1,17 +1,13 @@
-import pandas as pd
 import numpy as np
 import os
 import json
 import multiprocessing as mp
-import random
-import string
 from time import time
-from time import sleep
 from datetime import timedelta
 import agent_pytorch as ag
 
 
-def run_experiment(protocol, experiment, run_filename, frames):
+def run_experiment(protocol, experiment, run_filename):
     name = mp.current_process().name
 
     def epsilon_decay(curr_epsilon, i_episode, min_epsilon=0.05):
@@ -23,7 +19,8 @@ def run_experiment(protocol, experiment, run_filename, frames):
 
     agent = ag.Agent(batch_size=protocol['global_params']['batch_size'],
                      layers=protocol['global_params']['layers'],
-                     alpha=protocol['global_params']['alpha'],
+                     alpha=experiment['alpha'],
+                     gamma=experiment['gamma'],
                      dueling=experiment['dueling'],
                      double=experiment['double'],
                      prioritized_er=experiment['prioritized_er'])
@@ -39,9 +36,6 @@ def run_experiment(protocol, experiment, run_filename, frames):
                             log_floydhub=False)
 
     df_scores.to_csv(run_filename, index=False)
-    df_scores.columns = [f'{c}_{experiment["id"]}_{name}'
-                         for c in df_scores.columns]
-    frames.put(df_scores)
     print(f'{name}\tTime to complete: {timedelta(seconds=time() - t_run_start)}\n')
 
 
@@ -59,15 +53,18 @@ if __name__ == '__main__':
         protocol = json.load(f)
 
     t_start = time()
-    frames = mp.Queue()
     for i, experiment in enumerate(protocol['experiments']):
+        t_exp_start = time()
+        print('-' * 20)
+        print(f'Experiment {experiment["id"]}: {i + 1}/{len(protocol["experiments"])}:')
+        print('-' * 20)
+
         jobs = []
         eid = experiment['id']
         for j in range(protocol['global_params']['runs_per_experiment']):
             run_filename = f'{full_experiment_folder}/df_{eid}_run_{j + 1:02d}.csv'
             job = mp.Process(target=run_experiment, args=(protocol, experiment,
-                                                          run_filename,
-                                                          frames),
+                                                          run_filename),
                              name=f'run_{j + 1:02d}')
             jobs.append(job)
 
@@ -79,11 +76,12 @@ if __name__ == '__main__':
         for p in jobs:
             p.join()
 
-        experiment_filename = f'{full_experiment_folder}/df_{eid}.csv'
-        df_experiment = pd.concat([frames.get() for p in jobs], axis=1)
-        df_experiment.to_csv(experiment_filename, index=False)
+        # TODO combine all DataFrame runs in a single one for the experiment
 
-        break
+        print(f'Time to complete experiment {experiment["id"]}:'
+              f'{timedelta(seconds=time() - t_exp_start)}\n')
+
+    # TODO combine all DataFrame experiments in a single one for the protocol
 
     print(f'\nTime to complete all experiments: '
           f'{timedelta(seconds=time() - t_start)}\n')

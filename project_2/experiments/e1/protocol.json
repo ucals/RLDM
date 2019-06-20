@@ -1,34 +1,68 @@
 {
     "experiments": [
         {
-            "id": "a",
+            "id": "A",
             "dueling": true,
             "double": true,
-            "prioritized_er": true
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.99
         },
         {
-            "id": "b",
+            "id": "B",
             "dueling": false,
             "double": false,
-            "prioritized_er": false
+            "prioritized_er": false,
+            "alpha": 0.0001,
+            "gamma": 0.99
         },
         {
-            "id": "c",
+            "id": "C",
             "dueling": true,
             "double": false,
-            "prioritized_er": false
+            "prioritized_er": false,
+            "alpha": 0.0001,
+            "gamma": 0.99
         },
         {
-            "id": "d",
+            "id": "D",
             "dueling": false,
             "double": true,
-            "prioritized_er": false
+            "prioritized_er": false,
+            "alpha": 0.0001,
+            "gamma": 0.99
         },
         {
-            "id": "e",
+            "id": "E",
             "dueling": false,
             "double": false,
-            "prioritized_er": true
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.99
+        },
+        {
+            "id": "F",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": false,
+            "alpha": 0.0001,
+            "gamma": 0.99
+        },
+        {
+            "id": "G",
+            "dueling": false,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.99
+        },
+        {
+            "id": "H",
+            "dueling": true,
+            "double": false,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.99
         }
     ],
     "global_params": {
@@ -38,7 +72,6 @@
             512,
             512
         ],
-        "alpha": 0.0001,
         "max_episodes": 1000,
         "stop_when_solved": false,
         "keep_learning": false,

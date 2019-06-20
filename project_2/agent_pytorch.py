@@ -239,7 +239,7 @@ class Agent(object):
                 solved = True
                 best_score = mean(scores)
                 self.save_model()
-                print(f'{run_n}\tEpisode {i_episode + 1:>3}: New best score\t\t'
+                print(f'{run_n}\tEpisode {i_episode + 1:>3}: New best score\t'
                       f'past {len(scores):>3} runs avg: {best_score:0.1f}')
 
                 if print_same_line:
