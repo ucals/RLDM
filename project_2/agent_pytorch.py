@@ -67,9 +67,9 @@ class Agent(object):
     def remember(self, state, action, reward, next_state, done):
         if self.prioritized_er:
             st = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
-            old_q = self.Q(st).detach().numpy()[0][action]
+            old_q = self.Q(st).detach().cpu().numpy()[0][action]
             st_next = torch.from_numpy(next_state).float().unsqueeze(0).to(self.device)
-            q_t_next = self.Q_target(st_next).detach().numpy()[0]
+            q_t_next = self.Q_target(st_next).detach().cpu().numpy()[0]
             if done:
                 new_q = reward
             else:
@@ -125,9 +125,9 @@ class Agent(object):
                 batch = random.sample(self.memory, self.batch_size)
 
             states = torch.stack([torch.from_numpy(i[0]) for i in batch]).float().to(self.device)
-            y = self.Q(states).detach().numpy()
+            y = self.Q(states).detach().cpu().numpy()
             next_states = torch.stack([torch.from_numpy(i[3]) for i in batch]).float().to(self.device)
-            q_t = self.Q_target(next_states).detach().numpy()
+            q_t = self.Q_target(next_states).detach().cpu().numpy()
 
             # Do Q-learning update
             for i, (s, a, r, s_p, d) in enumerate(batch):
