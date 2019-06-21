@@ -23,7 +23,6 @@ if __name__ == '__main__':
 
     agent = ag.Agent(batch_size=32, layers=[512, 512], dueling=True,
                      double=True, alpha=0.0001, prioritized_er=True)  # alpha=0.00025
-    print(agent.Q)
 
     def epsilon_decay1(curr_epsilon, i_episode, min_epsilon=0.05, decay=0.999):
         return max(min_epsilon, curr_epsilon * decay)

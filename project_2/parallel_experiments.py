@@ -1,3 +1,4 @@
+import pandas as pd
 import numpy as np
 import os
 import json
@@ -39,6 +40,29 @@ def run_experiment(protocol, experiment, run_filename):
     print(f'{name}\tTime to complete: {timedelta(seconds=time() - t_run_start)}\n')
 
 
+def combine_experiment_runs(experiment_folder, experiment_id, runs, df_filename):
+    def load_experiment_df(filename, suffix):
+        return pd.read_csv(filename, dtype={'episode': int},
+                           index_col=0).add_suffix(suffix)
+
+    frames = [load_experiment_df(f'{experiment_folder}/df_{experiment_id}_run_{x + 1:02d}.csv',
+                                 suffix=f'_{x + 1:02d}') for x in range(runs)]
+    df = pd.concat(frames, axis=1)
+
+    def column_list(variable, runs):
+        return [f'{variable}_{x + 1:02d}' for x in range(runs)]
+
+    columns = []
+    for variable in ['score', 'avg_q_values']:
+        df[f'{variable}_mean'] = df[column_list(variable, runs)].mean(axis=1)
+        df[f'{variable}_std'] = df[column_list(variable, runs)].std(axis=1)
+        columns.extend((f'{variable}_mean', f'{variable}_std'))
+
+    df = df[columns]
+    df['rolling_100_score'] = df['score_mean'].rolling(100, min_periods=1).mean()
+    df.to_csv(df_filename, index=False)
+
+
 if __name__ == '__main__':
     experiment_name = 'e1'
 
@@ -76,7 +100,10 @@ if __name__ == '__main__':
         for p in jobs:
             p.join()
 
-        # TODO combine all DataFrame runs in a single one for the experiment
+        # TODO test
+        combine_experiment_runs(full_experiment_folder, eid,
+                                protocol['global_params']['runs_per_experiment'],
+                                df_filename=f'{full_experiment_folder}/df_{eid}.csv')
 
         print(f'Time to complete experiment {experiment["id"]}:'
               f'{timedelta(seconds=time() - t_exp_start)}\n')
