@@ -5,13 +5,10 @@ import json
 import multiprocessing as mp
 from time import time
 from datetime import timedelta
-import gym
-import torch
 import agent_pytorch as ag
-from torch_networks import DQN, DuelingDQN
 
 
-def run_experiment(protocol, experiment, run_filename, Q, Q_target):
+def run_experiment(protocol, experiment, run_filename):
     name = mp.current_process().name
 
     def epsilon_decay(curr_epsilon, i_episode, min_epsilon=0.05):
@@ -27,8 +24,7 @@ def run_experiment(protocol, experiment, run_filename, Q, Q_target):
                      gamma=experiment['gamma'],
                      dueling=experiment['dueling'],
                      double=experiment['double'],
-                     prioritized_er=experiment['prioritized_er'],
-                     Q=Q, Q_target=Q_target)
+                     prioritized_er=experiment['prioritized_er'])
 
     df_scores = agent.train(run_n=name,
                             max_episodes=protocol['global_params']['max_episodes'],
@@ -67,13 +63,6 @@ def combine_experiment_runs(experiment_folder, experiment_id, runs, df_filename)
     df.to_csv(df_filename, index=False)
 
 
-def build_model(layers, dueling=True, n_inputs=8, n_outputs=4, device=None):
-    if dueling:
-        return DuelingDQN(n_inputs, layers, n_outputs).to(device)
-    else:
-        return DQN(n_inputs, layers, n_outputs).to(device)
-
-
 if __name__ == '__main__':
     experiment_name = 'e1'
 
@@ -87,22 +76,6 @@ if __name__ == '__main__':
     with open(protocol_filename, 'r') as f:
         protocol = json.load(f)
 
-    # Uses a single Q and Q_target networks to all runs
-    layers = protocol['global_params']['layers']
-    env = gym.make('LunarLander-v2')
-    disable_cuda = False
-    if not disable_cuda and torch.cuda.is_available():
-        device = torch.device('cuda')
-    else:
-        device = torch.device('cpu')
-
-    Q = build_model(layers=layers, dueling=True,
-                    n_inputs=env.observation_space.shape[0],
-                    n_outputs=env.action_space.n, device=device)
-    Q_target = build_model(layers=layers, dueling=True,
-                           n_inputs=env.observation_space.shape[0],
-                           n_outputs=env.action_space.n, device=device)
-
     t_start = time()
     for i, experiment in enumerate(protocol['experiments']):
         t_exp_start = time()
@@ -115,7 +88,7 @@ if __name__ == '__main__':
         for j in range(protocol['global_params']['runs_per_experiment']):
             run_filename = f'{full_experiment_folder}/df_{eid}_run_{j + 1:02d}.csv'
             job = mp.Process(target=run_experiment, args=(protocol, experiment,
-                                                          run_filename, Q, Q_target),
+                                                          run_filename),
                              name=f'run_{j + 1:02d}')
             jobs.append(job)
 

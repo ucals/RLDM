@@ -17,7 +17,7 @@ class Agent(object):
     def __init__(self, gamma=0.99, alpha=0.0005, memory_capacity=10000,
                  batch_size=64, layers=[512, 512], dueling=True, double=True,
                  prioritized_er=False, tau=1.0, min_epsilon=0.05, huber=False,
-                 disable_cuda=False, Q=None, Q_target=None):
+                 disable_cuda=False):
         if not disable_cuda and torch.cuda.is_available():
             self.device = torch.device('cuda')
         else:
@@ -27,17 +27,8 @@ class Agent(object):
         self.gamma = gamma
         self.alpha = alpha
         self.batch_size = batch_size
-
-        if Q is None:
-            self.Q = self.build_model(layers=layers, dueling=dueling)
-        else:
-            self.Q = Q
-
-        if Q_target is None:
-            self.Q_target = self.build_model(layers=layers, dueling=dueling)
-        else:
-            self.Q_target = Q_target
-
+        self.Q = self.build_model(layers=layers, dueling=dueling)
+        self.Q_target = self.build_model(layers=layers, dueling=dueling)
         self.double = double
         self.prioritized_er = prioritized_er
         if prioritized_er:
