@@ -158,7 +158,7 @@ class Agent(object):
 
     def predict_Q_values(self, list_of_states):
         states = torch.stack([torch.from_numpy(st) for st in list_of_states]).float().to(self.device)
-        return self.Q(states).detach().numpy()
+        return self.Q(states).detach().cpu().numpy()
 
     def train(self, epsilon_decay, max_episodes=10000, runs_to_solve=100,
               max_t=1000, avg_solve_reward=200.0, freq_update_target=100,
