@@ -5,6 +5,7 @@ import json
 import multiprocessing as mp
 from time import time
 from datetime import timedelta
+import argparse
 import agent_pytorch as ag
 
 
@@ -64,7 +65,13 @@ def combine_experiment_runs(experiment_folder, experiment_id, runs, df_filename)
 
 
 if __name__ == '__main__':
-    experiment_name = 'e1'
+    parser = argparse.ArgumentParser(description='Run Lunar Lander solver '
+                                                 'experiments in parallel.')
+    parser.add_argument('experiment', help='experiment name in experiments '
+                                           'folder', type=str)
+    args = parser.parse_args()
+
+    experiment_name = args.experiment
 
     base_experiments_folder = 'experiments'
     full_experiment_folder = f'{base_experiments_folder}/{experiment_name}'
@@ -80,6 +87,7 @@ if __name__ == '__main__':
     for i, experiment in enumerate(protocol['experiments']):
         t_exp_start = time()
         print('-' * 20)
+        print(f'Protocol: {protocol_filename}')
         print(f'Experiment {experiment["id"]}: {i + 1}/{len(protocol["experiments"])}:')
         print('-' * 20)
 

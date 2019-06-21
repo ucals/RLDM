@@ -1,0 +1,88 @@
+{
+    "experiments": [
+        {
+            "id": "A",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.80
+        },
+        {
+            "id": "B",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.85
+        },
+        {
+            "id": "C",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.90
+        },
+        {
+            "id": "D",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.92
+        },
+        {
+            "id": "E",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.94
+        },
+        {
+            "id": "F",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.96
+        },
+        {
+            "id": "G",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.98
+        },
+        {
+            "id": "H",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.99
+        },
+        {
+            "id": "I",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 1.0
+        }
+    ],
+    "global_params": {
+        "runs_per_experiment": 20,
+        "batch_size": 32,
+        "layers": [
+            512,
+            512
+        ],
+        "max_episodes": 1000,
+        "stop_when_solved": false,
+        "keep_learning": false,
+        "print_frequency": 50
+    }
+}
