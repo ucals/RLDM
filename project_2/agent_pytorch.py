@@ -252,7 +252,7 @@ class Agent(object):
         if not log_floydhub:
             if compact:
                 print(f'{run_n} \tEpisode {i_episode + 1:>4}: '
-                      f'{int(scores[-1])} score\t\t'
+                      f'{int(scores[-1]):>4} score\t'
                       f'<avg, min, max> past {len(scores):>3} runs: '
                       f'{mean(scores):0.1f}, {min(scores):0.0f}, {max(scores):0.0f}\t'
                       f'{timedelta(seconds=time() - t0)}')
