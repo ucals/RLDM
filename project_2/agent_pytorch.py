@@ -16,7 +16,13 @@ from torch_networks import DQN, DuelingDQN
 class Agent(object):
     def __init__(self, gamma=0.99, alpha=0.0005, memory_capacity=10000,
                  batch_size=64, layers=[512, 512], dueling=True, double=True,
-                 prioritized_er=False, tau=1.0, min_epsilon=0.05, huber=False):
+                 prioritized_er=False, tau=1.0, min_epsilon=0.05, huber=False,
+                 disable_cuda=False):
+        if not disable_cuda and torch.cuda.is_available():
+            self.device = torch.device('cuda')
+        else:
+            self.device = torch.device('cpu')
+
         self.env = gym.make('LunarLander-v2')
         self.gamma = gamma
         self.alpha = alpha
@@ -41,10 +47,10 @@ class Agent(object):
     def build_model(self, layers, dueling=True, plot=True):
         if dueling:
             return DuelingDQN(self.env.observation_space.shape[0], layers,
-                              self.env.action_space.n)
+                              self.env.action_space.n).to(self.device)
         else:
             return DQN(self.env.observation_space.shape[0], layers,
-                       self.env.action_space.n)
+                       self.env.action_space.n).to(self.device)
 
     def count_parameters(self):
         return sum(p.numel() for p in self.Q.parameters() if p.requires_grad)
@@ -55,14 +61,14 @@ class Agent(object):
         if take_random_action and explore:
             return self.env.action_space.sample()
         else:
-            st = torch.from_numpy(state).float().unsqueeze(0)
+            st = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
             return torch.argmax(self.Q(st)).item()
 
     def remember(self, state, action, reward, next_state, done):
         if self.prioritized_er:
-            st = torch.from_numpy(state).float().unsqueeze(0)
+            st = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
             old_q = self.Q(st).detach().numpy()[0][action]
-            st_next = torch.from_numpy(next_state).float().unsqueeze(0)
+            st_next = torch.from_numpy(next_state).float().unsqueeze(0).to(self.device)
             q_t_next = self.Q_target(st_next).detach().numpy()[0]
             if done:
                 new_q = reward
@@ -114,13 +120,13 @@ class Agent(object):
         if len(self.memory) >= self.batch_size:
             if self.prioritized_er:
                 batch, idxs, is_weights = self.memory.sample(self.batch_size)
-                is_weights = torch.from_numpy(is_weights).float().view((self.batch_size, 1))
+                is_weights = torch.from_numpy(is_weights).float().view((self.batch_size, 1)).to(self.device)
             else:
                 batch = random.sample(self.memory, self.batch_size)
 
-            states = torch.stack([torch.from_numpy(i[0]) for i in batch]).float()
+            states = torch.stack([torch.from_numpy(i[0]) for i in batch]).float().to(self.device)
             y = self.Q(states).detach().numpy()
-            next_states = torch.stack([torch.from_numpy(i[3]) for i in batch]).float()
+            next_states = torch.stack([torch.from_numpy(i[3]) for i in batch]).float().to(self.device)
             q_t = self.Q_target(next_states).detach().numpy()
 
             # Do Q-learning update
@@ -131,27 +137,27 @@ class Agent(object):
                     y[i][a] = r + self.gamma * np.max(q_t[i])
 
             # Perform a gradient descent step
-            target = torch.from_numpy(y)
-            old = self.Q(states)
+            target = torch.from_numpy(y).to(self.device)
+            old = self.Q(states).to(self.device)
             if self.prioritized_er:
                 if self.huber:
-                    t = torch.abs(target - old)
-                    loss = (is_weights * torch.where(t < 1, 0.5 * t ** 2, t - 0.5)).mean()
+                    t = torch.abs(target - old).to(self.device)
+                    loss = (is_weights * torch.where(t < 1, 0.5 * t ** 2, t - 0.5)).mean().to(self.device)
                 else:
-                    loss = (is_weights * ((target - old) ** 2)).mean()
+                    loss = (is_weights * ((target - old) ** 2)).mean().to(self.device)
             else:
                 if self.huber:
-                    t = torch.abs(target - old)
-                    loss = torch.where(t < 1, 0.5 * t ** 2, t - 0.5)
+                    t = torch.abs(target - old).to(self.device)
+                    loss = torch.where(t < 1, 0.5 * t ** 2, t - 0.5).to(self.device)
                 else:
-                    loss = ((target - old) ** 2).mean()
+                    loss = ((target - old) ** 2).mean().to(self.device)
 
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
 
     def predict_Q_values(self, list_of_states):
-        states = torch.stack([torch.from_numpy(st) for st in list_of_states]).float()
+        states = torch.stack([torch.from_numpy(st) for st in list_of_states]).float().to(self.device)
         return self.Q(states).detach().numpy()
 
     def train(self, epsilon_decay, max_episodes=10000, runs_to_solve=100,
