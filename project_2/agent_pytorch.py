@@ -47,10 +47,10 @@ class Agent(object):
     def build_model(self, layers, dueling=True, plot=True):
         if dueling:
             return DuelingDQN(self.env.observation_space.shape[0], layers,
-                              self.env.action_space.n).to(self.device)
+                              self.env.action_space.n) #.to(self.device)
         else:
             return DQN(self.env.observation_space.shape[0], layers,
-                       self.env.action_space.n).to(self.device)
+                       self.env.action_space.n) #.to(self.device)
 
     def count_parameters(self):
         return sum(p.numel() for p in self.Q.parameters() if p.requires_grad)
