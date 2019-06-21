@@ -251,8 +251,8 @@ class Agent(object):
             steps_until_done, compact=False, run_n='', log_floydhub=False):
         if not log_floydhub:
             if compact:
-                print(f'{run_n} \tEpisode {i_episode + 1:>3}: '
-                      f'{int(scores[-1]):>4} score\t\t'
+                print(f'{run_n} \tEpisode {i_episode + 1:>4}: '
+                      f'{int(scores[-1])} score\t\t'
                       f'<avg, min, max> past {len(scores):>3} runs: '
                       f'{mean(scores):0.1f}, {min(scores):0.0f}, {max(scores):0.0f}')
             else:
