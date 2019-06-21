@@ -219,14 +219,14 @@ class Agent(object):
             if (i_episode + 1) % print_frequency == 0:
                 self.log(i_episode, episode_time, scores, best_score, q_values,
                          i + 1, compact=not print_same_line, run_n=run_n,
-                         log_floydhub=log_floydhub)
+                         log_floydhub=log_floydhub, t0=t_start)
 
             # Register first time agent solves
             if (mean(scores) >= avg_solve_reward) and stop_when_solved:
                 if (i_episode + 1) % print_frequency != 0:
                     self.log(i_episode, episode_time, scores, best_score,
                              q_values, i + 1, compact=not print_same_line,
-                             run_n=run_n, log_floydhub=log_floydhub)
+                             run_n=run_n, log_floydhub=log_floydhub, t0=t_start)
 
                 print(f'{run_n} \tSolved in {i_episode + 1} total '
                       f'episodes. Training time: {timedelta(seconds=time() - t_start)}')
@@ -248,13 +248,14 @@ class Agent(object):
         return df_scores
 
     def log(self, i_episode, episode_time, scores, best_score, q_values,
-            steps_until_done, compact=False, run_n='', log_floydhub=False):
+            steps_until_done, t0, compact=False, run_n='', log_floydhub=False):
         if not log_floydhub:
             if compact:
                 print(f'{run_n} \tEpisode {i_episode + 1:>4}: '
                       f'{int(scores[-1])} score\t\t'
                       f'<avg, min, max> past {len(scores):>3} runs: '
-                      f'{mean(scores):0.1f}, {min(scores):0.0f}, {max(scores):0.0f}')
+                      f'{mean(scores):0.1f}, {min(scores):0.0f}, {max(scores):0.0f}\t'
+                      f'{timedelta(seconds=time() - t0)}')
             else:
                 print(f'Episode {i_episode + 1}: {int(scores[-1])} score '
                       f'(epsilon: {self.epsilon:0.3f}, steps: {steps_until_done}, '
