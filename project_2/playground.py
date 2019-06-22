@@ -1,9 +1,9 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
-
-my_tuple = ([1, 3, 9], [8, 2])
-
-print ("Input  touple : ", my_tuple)
-
-out_arr = np.asarray(my_tuple)
-print(type(((out_arr[1]))))
+x = np.linspace(0, 500, 100)
+y = np.exp(-x / 10)
+fig, ax = plt.subplots()
+ax.plot(x, y)
+ax.grid()
+plt.show()

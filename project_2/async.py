@@ -21,6 +21,10 @@ parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
                     help='learning rate (default: 0.0001)')
 parser.add_argument('--gamma', type=float, default=0.99, metavar='G',
                     help='gamma (default: 0.99)')
+parser.add_argument('--exp-factor', type=int, default=10, metavar='E',
+                    help='epsilon exponential decay factor (default: 10)')
+parser.add_argument('--min-epsilon', type=float, default=0.05, metavar='ME',
+                    help='minimum epsilon (default: 0.05)')
 parser.add_argument('--update-target-interval', type=int, default=100, metavar='N',
                     help='how many steps to wait before updating target network')
 parser.add_argument('--update-online-interval', type=int, default=10, metavar='N',
@@ -67,7 +71,8 @@ def train(rank, args, Q, Q_target, device, env):
             loss += (y - old_q) ** 2
 
             state = next_state
-            epsilon = epsilon_decay(episode)
+            epsilon = epsilon_decay(episode, min_epsilon=args.min_epsilon,
+                                    exp_factor=args.exp_factor)
 
             if (rank == 0) and (i % args.update_target_interval == 0):
                 update_target_network(Q, Q_target)
@@ -90,8 +95,8 @@ def update_target_network(Q, Q_target):
     Q_target.load_state_dict(Q.state_dict())
 
 
-def epsilon_decay(i_episode, min_epsilon=0.05):
-    return max(min_epsilon, np.exp(-i_episode / 70))
+def epsilon_decay(i_episode, min_epsilon=0.05, exp_factor=10):
+    return max(min_epsilon, np.exp(-i_episode / exp_factor))
 
 
 def log(name, episode, scores, t0):
