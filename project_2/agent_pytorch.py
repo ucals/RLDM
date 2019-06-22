@@ -91,27 +91,45 @@ class Agent(object):
         self.Q.eval()
 
     def experience_replay_vectorized(self):
-        # TODO update accordingly to experience_replay
         if len(self.memory) >= self.batch_size:
-            selected_rows = np.random.choice(len(self.memory),
-                                             size=self.batch_size,
-                                             replace=False)
-            mem = np.array(self.memory)
-            s = np.vstack(mem[selected_rows, 0])
-            a = mem[selected_rows, 1].astype(int)
-            r = mem[selected_rows, 2]
-            s_next = np.vstack(mem[selected_rows, 3])
-            d = mem[selected_rows, 4].astype(int)
+            if self.prioritized_er:
+                batch, idxs, is_weights = self.memory.sample(self.batch_size)
+                is_weights = torch.from_numpy(is_weights).float().view((self.batch_size, 1)).to(self.device)
+            else:
+                batch = random.sample(self.memory, self.batch_size)
 
-            y = self.Q(torch.from_numpy(s).float()).detach().numpy()
-            q_next_t = self.Q_target(torch.from_numpy(s_next).float()).detach().numpy()
-            q_next_o = self.Q(torch.from_numpy(s_next).float()).detach().numpy()
+            batch_ = np.asarray(batch)
+            s = np.stack(batch_[:, 0])
+            a = np.stack(batch_[:, 1])
+            r = np.stack(batch_[:, 2])
+            s_p = np.stack(batch_[:, 3])
+            d = np.stack(batch_[:, 4].astype(int))
+
+            states = torch.from_numpy(s).to(self.device)
+            y = self.Q(states).detach().cpu().numpy()
+            next_states = torch.from_numpy(s_p).to(self.device)
+            q_next_t = self.Q_target(next_states).detach().cpu().numpy()
+            q_next_o = self.Q(next_states).detach().cpu().numpy()
 
             amax = np.argmax(q_next_o, axis=1)
             y[np.arange(y.shape[0]), a] = r + self.gamma * q_next_t[np.arange(y.shape[0]), amax] * (1 - d)
 
             # Perform a gradient descent step
-            loss = self.loss_fn(torch.from_numpy(y), self.Q(torch.from_numpy(s).float()))
+            target = torch.from_numpy(y).to(self.device)
+            old = self.Q(states).to(self.device)
+            if self.prioritized_er:
+                if self.huber:
+                    t = torch.abs(target - old).to(self.device)
+                    loss = (is_weights * torch.where(t < 1, 0.5 * t ** 2, t - 0.5)).mean().to(self.device)
+                else:
+                    loss = (is_weights * ((target - old) ** 2)).mean().to(self.device)
+            else:
+                if self.huber:
+                    t = torch.abs(target - old).to(self.device)
+                    loss = torch.where(t < 1, 0.5 * t ** 2, t - 0.5).to(self.device)
+                else:
+                    loss = ((target - old) ** 2).mean().to(self.device)
+
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
@@ -124,9 +142,16 @@ class Agent(object):
             else:
                 batch = random.sample(self.memory, self.batch_size)
 
-            states = torch.stack([torch.from_numpy(i[0]) for i in batch]).float().to(self.device)
+            batch_ = np.asarray(batch)
+            s = np.stack(batch_[:, 0])
+            a = np.stack(batch_[:, 1])
+            r = np.stack(batch_[:, 2])
+            s_p = np.stack(batch_[:, 3])
+            d = np.stack(batch_[:, 4].astype(int))
+
+            states = torch.from_numpy(s).to(self.device)
             y = self.Q(states).detach().cpu().numpy()
-            next_states = torch.stack([torch.from_numpy(i[3]) for i in batch]).float().to(self.device)
+            next_states = torch.from_numpy(s_p).to(self.device)
             q_t = self.Q_target(next_states).detach().cpu().numpy()
 
             # Do Q-learning update
