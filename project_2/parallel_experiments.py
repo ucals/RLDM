@@ -61,7 +61,7 @@ def combine_experiment_runs(experiment_folder, experiment_id, runs, df_filename)
 
     df = df[columns]
     df['rolling_100_score'] = df['score_mean'].rolling(100, min_periods=1).mean()
-    df.to_csv(df_filename, index=False)
+    df.to_csv(df_filename)
 
 
 if __name__ == '__main__':
@@ -115,7 +115,6 @@ if __name__ == '__main__':
         print(f'Time to complete experiment {experiment["id"]}: '
               f'{timedelta(seconds=time() - t_exp_start)}\n')
 
-        break
 
     # TODO combine all DataFrame experiments in a single one for the protocol
 
