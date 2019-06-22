@@ -142,16 +142,9 @@ class Agent(object):
             else:
                 batch = random.sample(self.memory, self.batch_size)
 
-            batch_ = np.asarray(batch)
-            s = np.stack(batch_[:, 0])
-            a = np.stack(batch_[:, 1])
-            r = np.stack(batch_[:, 2])
-            s_p = np.stack(batch_[:, 3])
-            d = np.stack(batch_[:, 4].astype(int))
-
-            states = torch.from_numpy(s).to(self.device)
+            states = torch.stack([torch.from_numpy(i[0]) for i in batch]).float().to(self.device)
             y = self.Q(states).detach().cpu().numpy()
-            next_states = torch.from_numpy(s_p).to(self.device)
+            next_states = torch.stack([torch.from_numpy(i[3]) for i in batch]).float().to(self.device)
             q_t = self.Q_target(next_states).detach().cpu().numpy()
 
             # Do Q-learning update
