@@ -1,0 +1,80 @@
+{
+    "experiments": [
+        {
+            "id": "A",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.99
+        },
+        {
+            "id": "B",
+            "dueling": false,
+            "double": false,
+            "prioritized_er": false,
+            "alpha": 0.0001,
+            "gamma": 0.99
+        },
+        {
+            "id": "C",
+            "dueling": true,
+            "double": false,
+            "prioritized_er": false,
+            "alpha": 0.0001,
+            "gamma": 0.99
+        },
+        {
+            "id": "D",
+            "dueling": false,
+            "double": true,
+            "prioritized_er": false,
+            "alpha": 0.0001,
+            "gamma": 0.99
+        },
+        {
+            "id": "E",
+            "dueling": false,
+            "double": false,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.99
+        },
+        {
+            "id": "F",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": false,
+            "alpha": 0.0001,
+            "gamma": 0.99
+        },
+        {
+            "id": "G",
+            "dueling": false,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.99
+        },
+        {
+            "id": "H",
+            "dueling": true,
+            "double": false,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.99
+        }
+    ],
+    "global_params": {
+        "runs_per_experiment": 20,
+        "batch_size": 32,
+        "layers": [
+            512,
+            512
+        ],
+        "max_episodes": 1000,
+        "stop_when_solved": false,
+        "keep_learning": false,
+        "print_frequency": 50
+    }
+}
