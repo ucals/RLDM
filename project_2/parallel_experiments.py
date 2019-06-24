@@ -10,7 +10,7 @@ import agent_pytorch as ag
 from epsilon_curves import get_epsilon_decay
 
 
-def run_experiment(protocol, experiment, run_filename):
+def run_experiment(protocol, experiment, folder):
     name = mp.current_process().name
 
     decay_function = experiment['decay_function'] if 'decay_function' in \
@@ -38,8 +38,18 @@ def run_experiment(protocol, experiment, run_filename):
                             render=False,
                             print_same_line=False,
                             log_floydhub=False)
-
+    run_filename = f'{folder}/df_{eid}_run_{j + 1:02d}.csv'
     df_scores.to_csv(run_filename, index=False)
+
+    if 'test_for' in protocol['global_params']:
+        df_scores_test = agent.test(run_n=name,
+                                    max_episodes=protocol['global_params']['test_for'],
+                                    print_frequency=protocol['global_params']['print_frequency'],
+                                    render=False,
+                                    print_same_line=False)
+        test_run_filename = f'{folder}/df_{eid}_run_{j + 1:02d}_test.csv'
+        df_scores_test.to_csv(test_run_filename, index=False)
+
     print(f'{name}\tTime to complete: {timedelta(seconds=time() - t_run_start)}\n')
 
 
@@ -96,9 +106,8 @@ if __name__ == '__main__':
         jobs = []
         eid = experiment['id']
         for j in range(protocol['global_params']['runs_per_experiment']):
-            run_filename = f'{full_experiment_folder}/df_{eid}_run_{j + 1:02d}.csv'
             job = mp.Process(target=run_experiment, args=(protocol, experiment,
-                                                          run_filename),
+                                                          full_experiment_folder),
                              name=f'run_{j + 1:02d}')
             jobs.append(job)
 

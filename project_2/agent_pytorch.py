@@ -271,6 +271,56 @@ class Agent(object):
 
         return df_scores
 
+    def test(self, max_episodes=100, max_t=1000, render=False,
+             print_same_line=True, print_frequency=1, run_n='',
+             score_filename='live_score.csv'):
+        scores = deque(maxlen=max_episodes)
+        df_scores = pd.DataFrame(columns=['episode', 'epsilon', 'score',
+                                          'average', 'avg_q_values'])
+        t_start = time()
+        best_score = float('-inf')
+
+        for i_episode in range(max_episodes):
+            t = time()
+            state = self.env.reset()
+            points = 0
+            states = [state]
+            for i in range(max_t):
+                if render:
+                    self.env.render()
+
+                action = self.act(state, explore=False)
+                next_state, reward, done, info = self.env.step(action)
+                points += reward
+                state = next_state
+                states.append(state)
+                if done:
+                    break
+
+            episode_time = time() - t
+
+            # Record score, state values and data from episode
+            q_values = self.predict_Q_values(states)
+            scores.append(points)
+            if mean(scores) > best_score:
+                best_score = mean(scores)
+
+            df_scores.loc[i_episode] = [int(i_episode), self.epsilon,
+                                        int(points), mean(scores),
+                                        np.mean(q_values)]
+            df_scores.to_csv(score_filename, index=False)
+
+            # Log data in-screen
+            if i_episode >= 0 and print_same_line:
+                sys.stdout.write(b'\033[2A'.decode())
+
+            if (i_episode + 1) % print_frequency == 0:
+                self.log(i_episode, episode_time, scores, best_score, q_values,
+                         i + 1, compact=not print_same_line, run_n=run_n,
+                         t0=t_start)
+
+        return df_scores
+
     def log(self, i_episode, episode_time, scores, best_score, q_values,
             steps_until_done, t0, compact=False, run_n='', log_floydhub=False):
         if not log_floydhub:
