@@ -1,0 +1,97 @@
+{
+    "experiments": [
+        {
+            "id": "A",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.99,
+            "decay_function": 1
+        },
+        {
+            "id": "B",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.99,
+            "decay_function": 2
+        },
+        {
+            "id": "C",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.99,
+            "decay_function": 3
+        },
+        {
+            "id": "D",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.99,
+            "decay_function": 4
+        },
+        {
+            "id": "E",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.99,
+            "decay_function": 5
+        },
+        {
+            "id": "F",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.99,
+            "decay_function": 6
+        },
+        {
+            "id": "G",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.99,
+            "decay_function": 7
+        },
+        {
+            "id": "H",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.99,
+            "decay_function": 8
+        },
+        {
+            "id": "I",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.0001,
+            "gamma": 0.99,
+            "decay_function": 9
+        }
+    ],
+    "global_params": {
+        "runs_per_experiment": 10,
+        "batch_size": 32,
+        "layers": [
+            512,
+            512
+        ],
+        "max_episodes": 1000,
+        "stop_when_solved": false,
+        "keep_learning": false,
+        "print_frequency": 50
+    }
+}

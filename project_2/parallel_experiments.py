@@ -7,13 +7,15 @@ from time import time
 from datetime import timedelta
 import argparse
 import agent_pytorch as ag
+from epsilon_curves import get_epsilon_decay
 
 
 def run_experiment(protocol, experiment, run_filename):
     name = mp.current_process().name
 
-    def epsilon_decay(curr_epsilon, i_episode, min_epsilon=0.05):
-        return max(min_epsilon, np.exp(-i_episode / 70))
+    decay_function = experiment['decay_function'] if 'decay_function' in \
+                                                     experiment else 0
+    epsilon_decay = get_epsilon_decay(decay_function=decay_function)
 
     t_run_start = time()
     print(f'Starting {name}/{protocol["global_params"]["runs_per_experiment"]}, '

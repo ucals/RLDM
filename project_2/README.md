@@ -27,10 +27,12 @@ Installing in a clean Ubuntu image:
 - TODO: test different epsilon curves
 
 Next steps:
-- Deploy 3b, simpler Gamma experiment, in AWS
-- Parametrize different exploration strategies in experiment protocol
+- Deploy 3b, simpler Gamma experiment, in AWS (DONE)
+- Parametrize different exploration strategies in experiment protocol (DONE)
 - Deploy 4, different exploration strategies, in AWS
 - Do small change in code to execute 1b and deploy in AWS
 - Prepare code to do single-run experiments in parallel
 - Parametrize optimizer in experiment protocol
 - Deploy 2b, different learning rates vs. optimizer., in AWS
+
+- Check if e3b is doing better/faster than e3
