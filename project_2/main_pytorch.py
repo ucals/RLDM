@@ -28,7 +28,7 @@ if __name__ == '__main__':
         return max(min_epsilon, curr_epsilon * decay)
 
     def epsilon_decay2(curr_epsilon, i_episode, min_epsilon=0.05):
-        return max(min_epsilon, np.exp(-i_episode / 70))
+        return max(min_epsilon, np.exp(-i_episode / 40))
 
     print('Agent parameters: ')
     print(vars(agent))

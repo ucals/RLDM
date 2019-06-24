@@ -22,11 +22,11 @@ y8 = 1 / (1 + np.exp(x/40 - 6))
 y9 = 1 / (1 + np.exp(x/3 - 6))
 
 fig, ax = plt.subplots()
-ax.plot(x, y0)
-ax.plot(x, y1)
-ax.plot(x, y2)
-ax.plot(x, y3)
-ax.plot(x, y4)
+ax.plot(x, y0, label='y0')
+ax.plot(x, y1, label='y1')
+ax.plot(x, y2, label='y2')
+ax.plot(x, y3, label='y3')
+ax.plot(x, y4, label='y4')
 
 #ax.plot(x, y5)
 #ax.plot(x, y6)
@@ -35,4 +35,6 @@ ax.plot(x, y4)
 #ax.plot(x, y9)
 
 ax.grid()
+ax.legend()
+
 plt.show()

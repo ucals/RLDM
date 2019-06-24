@@ -91,7 +91,7 @@
         ],
         "max_episodes": 1000,
         "stop_when_solved": false,
-        "keep_learning": false,
+        "keep_learning": true,
         "print_frequency": 50
     }
 }

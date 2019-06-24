@@ -279,6 +279,7 @@ class Agent(object):
                                           'average', 'avg_q_values'])
         t_start = time()
         best_score = float('-inf')
+        self.epsilon = 0
 
         for i_episode in range(max_episodes):
             t = time()
