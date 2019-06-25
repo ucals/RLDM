@@ -250,7 +250,7 @@
         }
     ],
     "global_params": {
-        "optimizer": "rmsprop",
+        "optimizer": "adam",
         "batch_size": 32,
         "layers": [
             512,
