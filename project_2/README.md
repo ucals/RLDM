@@ -35,5 +35,5 @@ Next steps:
 - Parametrize optimizer in experiment protocol (DONE)
 - Deploy 2b, different learning rates vs. optimizer., in AWS:
     - Break 2b in 5a (RMSProp), 5b (Adam), and 5c (SGD) (DONE)
-    - Deploy in AWS 
+    - Deploy in AWS (5a running locally)
 
