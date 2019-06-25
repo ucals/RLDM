@@ -31,7 +31,8 @@ Next steps:
 - Parametrize different exploration strategies in experiment protocol (DONE)
 - Deploy e4, different exploration strategies, in AWS (DONE)
 - Do small change in code to execute e1b and deploy in AWS (DONE)
-- Prepare code to do single-run experiments in parallel
-- Parametrize optimizer in experiment protocol
-- Deploy 2b, different learning rates vs. optimizer., in AWS
+- Prepare code to do single-run experiments in parallel (DONE)
+- Parametrize optimizer in experiment protocol (DONE)
+- Deploy 2b, different learning rates vs. optimizer., in AWS:
+    - Break 2b in 5a (RMSProp), 5b (Adam), and 5c (SGD)
 

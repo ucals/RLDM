@@ -10,7 +10,8 @@ import agent_pytorch as ag
 from epsilon_curves import get_epsilon_decay
 
 
-def run_experiment(protocol, experiment, run_filename, test_run_filename):
+def run_experiment(protocol, experiment, exp_filename, test_exp_filename,
+                   counter):
     name = mp.current_process().name
 
     decay_function = experiment['decay_function'] if 'decay_function' in \
@@ -18,10 +19,10 @@ def run_experiment(protocol, experiment, run_filename, test_run_filename):
     epsilon_decay = get_epsilon_decay(decay_function=decay_function)
 
     t_run_start = time()
-    print(f'Starting {name}/{protocol["global_params"]["runs_per_experiment"]}, '
-          f'experiment {experiment["id"]} ({i + 1}/{len(protocol["experiments"])})')
+    print(f'Starting experiment {experiment["id"]} ({counter + 1}/{len(protocol["experiments"])})')
 
-    agent = ag.Agent(batch_size=protocol['global_params']['batch_size'],
+    agent = ag.Agent(optimizer=protocol['global_params']['optimizer'],
+                     batch_size=protocol['global_params']['batch_size'],
                      layers=protocol['global_params']['layers'],
                      alpha=experiment['alpha'],
                      gamma=experiment['gamma'],
@@ -38,8 +39,7 @@ def run_experiment(protocol, experiment, run_filename, test_run_filename):
                             render=False,
                             print_same_line=False,
                             log_floydhub=False)
-
-    df_scores.to_csv(run_filename, index=False)
+    df_scores.to_csv(exp_filename, index=False)
 
     if 'test_for' in protocol['global_params']:
         df_scores_test = agent.test(run_n=name,
@@ -47,32 +47,9 @@ def run_experiment(protocol, experiment, run_filename, test_run_filename):
                                     print_frequency=protocol['global_params']['print_frequency'],
                                     render=False,
                                     print_same_line=False)
-        df_scores_test.to_csv(test_run_filename, index=False)
+        df_scores_test.to_csv(test_exp_filename, index=False)
 
     print(f'{name}\tTime to complete: {timedelta(seconds=time() - t_run_start)}\n')
-
-
-def combine_experiment_runs(experiment_folder, experiment_id, runs, df_filename):
-    def load_experiment_df(filename, suffix):
-        return pd.read_csv(filename, dtype={'episode': int},
-                           index_col=0).add_suffix(suffix)
-
-    frames = [load_experiment_df(f'{experiment_folder}/df_{experiment_id}_run_{x + 1:02d}.csv',
-                                 suffix=f'_{x + 1:02d}') for x in range(runs)]
-    df = pd.concat(frames, axis=1)
-
-    def column_list(variable, runs):
-        return [f'{variable}_{x + 1:02d}' for x in range(runs)]
-
-    columns = []
-    for variable in ['score', 'average', 'avg_q_values']:
-        df[f'{variable}_mean'] = df[column_list(variable, runs)].mean(axis=1)
-        df[f'{variable}_std'] = df[column_list(variable, runs)].std(axis=1)
-        columns.extend((f'{variable}_mean', f'{variable}_std'))
-
-    df = df[columns]
-    df['rolling_100_score'] = df['score_mean'].rolling(100, min_periods=1).mean()
-    df.to_csv(df_filename)
 
 
 if __name__ == '__main__':
@@ -95,42 +72,28 @@ if __name__ == '__main__':
         protocol = json.load(f)
 
     t_start = time()
+    jobs = []
+    print('-' * 20)
+    print(f'Protocol: {protocol_filename}')
+    print('-' * 20)
     for i, experiment in enumerate(protocol['experiments']):
         t_exp_start = time()
-        print('-' * 20)
-        print(f'Protocol: {protocol_filename}')
-        print(f'Experiment {experiment["id"]}: {i + 1}/{len(protocol["experiments"])}:')
-        print('-' * 20)
-
-        jobs = []
         eid = experiment['id']
-        for j in range(protocol['global_params']['runs_per_experiment']):
-            run_filename = f'{full_experiment_folder}/df_{eid}_run_{j + 1:02d}.csv'
-            test_run_filename = f'{full_experiment_folder}/df_{eid}_run_{j + 1:02d}_test.csv'
+        exp_filename = f'{full_experiment_folder}/df_{eid}.csv'
+        test_exp_filename = f'{full_experiment_folder}/df_{eid}_test.csv'
+        job = mp.Process(target=run_experiment, args=(protocol, experiment,
+                                                      exp_filename,
+                                                      test_exp_filename, i),
+                         name=experiment['id'])
+        jobs.append(job)
 
-            job = mp.Process(target=run_experiment, args=(protocol, experiment,
-                                                          run_filename,
-                                                          test_run_filename),
-                             name=f'run_{j + 1:02d}')
-            jobs.append(job)
+    # Run processes
+    for p in jobs:
+        p.start()
 
-        # Run processes
-        for p in jobs:
-            p.start()
-
-        # Exit the completed processes
-        for p in jobs:
-            p.join()
-
-        combine_experiment_runs(full_experiment_folder, eid,
-                                protocol['global_params']['runs_per_experiment'],
-                                df_filename=f'{full_experiment_folder}/df_{eid}.csv')
-
-        print(f'Time to complete experiment {experiment["id"]}: '
-              f'{timedelta(seconds=time() - t_exp_start)}\n')
-
-
-    # TODO combine all DataFrame experiments in a single one for the protocol
+    # Exit the completed processes
+    for p in jobs:
+        p.join()
 
     print(f'\nTime to complete all experiments: '
           f'{timedelta(seconds=time() - t_start)}\n')

@@ -16,8 +16,8 @@ from torch_networks import DQN, DuelingDQN
 class Agent(object):
     def __init__(self, gamma=0.99, alpha=0.0005, memory_capacity=10000,
                  batch_size=64, layers=[512, 512], dueling=True, double=True,
-                 prioritized_er=False, tau=1.0, min_epsilon=0.05, huber=False,
-                 disable_cuda=False):
+                 prioritized_er=False, optimizer='rmsprop', tau=1.0,
+                 min_epsilon=0.05, huber=False, disable_cuda=False):
         if not disable_cuda and torch.cuda.is_available():
             self.device = torch.device('cuda')
         else:
@@ -41,7 +41,17 @@ class Agent(object):
         self.min_epsilon = min_epsilon
 
         self.huber = huber
-        self.optimizer = torch.optim.RMSprop(self.Q.parameters(), lr=self.alpha)
+        if optimizer == 'rmsprop':
+            self.optimizer = torch.optim.RMSprop(self.Q.parameters(),
+                                                 lr=self.alpha)
+        elif optimizer == 'adam':
+            self.optimizer = torch.optim.Adam(self.Q.parameters(),
+                                              lr=self.alpha)
+        elif optimizer == 'sgd':
+            self.optimizer = torch.optim.SGD(self.Q.parameters(), lr=self.alpha)
+        else:
+            raise ValueError('Optimizer must be "rmsprop", "adam" or "sgd"')
+
         self.update_target_weights()
 
     def build_model(self, layers, dueling=True):
