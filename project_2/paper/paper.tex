@@ -1,0 +1,75 @@
+\documentclass{article}
+
+
+\usepackage{arxiv}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{lipsum}		% Can be removed after putting your text content
+\usepackage{textgreek}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{algpascal}
+\usepackage{graphicx}
+\usepackage[
+backend=biber,
+style=numeric,
+sorting=ynt,
+citestyle=authoryear
+]{biblatex}
+\addbibresource{paper.bib}
+
+%\graphicspath{ {./images/} }
+
+\title{Playing Lunar Lander with Deep Reinforcement Learning}
+
+\date{June 28th, 2019}
+
+\author{
+Carlos Souza\thanks{Latest Git hash: INCLUDE LATEST GITHASH}\\
+%Department of Computer Science\\
+Georgia Institute of Technology\\
+São Paulo, SP, Brazil \\
+\texttt{souza@gatech.edu} \\
+}
+
+\begin{document}
+    \maketitle
+
+    \begin{abstract}
+        \lipsum[1]
+    \end{abstract}
+
+
+    % keywords can be removed
+    \keywords{Reinforcement learning \and Deep Reinforcement Learning \and Deep Q-Networks}
+    %\githash{DO NOT FORGET TO INCLUDE LATEST GIT HASH}
+
+
+    \section{Introduction}
+    \label{sec:introduction}
+    Reinforcement learning (RL) theory provides mathematical background and classic algorithms to enable agents to learn optimally control an environment.
+    However, to successfuly apply those algorithms in problems with real-world complexity, several challenges must be tackled, must notably i) how to derive efficient representations of the environment from high-dimensional sensory inputs, and ii) how to use these to generalize past experience to new situation (\cite{dqn}).
+
+    Recent advances in deep neural networks originated a new type of agent, known as Deep Q-Network agent, capable of overcoming these challenges, which enabled RL algorithms to perform effectively.
+    All the many recent successes in applying RL to complex sequential decision-making problems were kick-started by the Deep Q-Network algorithm (DQN; \cite{dqn}).
+    Since then, many extensions have been proposed to improve its stability and/or speed.
+Double DQN (DDQN; \cite{ddqn}) addresses the problem of overestimation of action values, by decomposing the max operation in the target into action selection and action evaluation.
+    The Dueling Network architecture (Dueling DDQN; \cite{dueling}) better generalize learning accross actions by proposing an architecture that explicitly separates the representation of state values and (state-dependent) action advantages.
+    Prioritized Experience Replay (PER; \cite{per}) improves data efficiency, by replaying more of- ten transitions from which there is more to learn.
+
+
+
+
+
+
+    \printbibliography
+
+\end{document}

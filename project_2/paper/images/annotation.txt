@@ -1,0 +1,6 @@
+Training set: 100
+Episode: 10
+Time step: 8
+Current state: E
+Next state: terminal
+Reward: 1

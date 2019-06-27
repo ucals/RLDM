@@ -11,3 +11,5 @@ out/
 **/.ipynb_checkpoints/
 **/__pycache__/
 homeworks/
+gym/
+reading/
