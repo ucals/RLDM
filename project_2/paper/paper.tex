@@ -40,6 +40,10 @@ São Paulo, SP, Brazil \\
 \texttt{souza@gatech.edu} \\
 }
 
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+
 \begin{document}
     \maketitle
 
@@ -56,20 +60,102 @@ São Paulo, SP, Brazil \\
     \section{Introduction}
     \label{sec:introduction}
     Reinforcement learning (RL) theory provides mathematical background and classic algorithms to enable agents to learn optimally control an environment.
-    However, to successfuly apply those algorithms in problems with real-world complexity, several challenges must be tackled, must notably i) how to derive efficient representations of the environment from high-dimensional sensory inputs, and ii) how to use these to generalize past experience to new situation (\cite{dqn}).
+    However, to successfully apply those algorithms in problems with real-world complexity, several challenges must be tackled, must notably i) how to derive efficient representations of the environment from high-dimensional sensory inputs, and ii) how to use these to generalize past experience to new situation (\cite{dqn}).
 
     Recent advances in deep neural networks originated a new type of agent, known as Deep Q-Network agent, capable of overcoming these challenges, which enabled RL algorithms to perform effectively.
     All the many recent successes in applying RL to complex sequential decision-making problems were kick-started by the Deep Q-Network algorithm (DQN; \cite{dqn}).
     Since then, many extensions have been proposed to improve its stability and/or speed.
 Double DQN (DDQN; \cite{ddqn}) addresses the problem of overestimation of action values, by decomposing the max operation in the target into action selection and action evaluation.
     The Dueling Network architecture (Dueling DDQN; \cite{dueling}) better generalize learning accross actions by proposing an architecture that explicitly separates the representation of state values and (state-dependent) action advantages.
-    Prioritized Experience Replay (PER; \cite{per}) improves data efficiency, by replaying more of- ten transitions from which there is more to learn.
+    Prioritized Experience Replay (PER; \cite{per}) improves data efficiency, by replaying more often transitions from which there is more to learn.
+
+    Each of these algorithms enables substantial performance improvements in isolation and combined, since they build on a shared framework.
+    In this paper we propose to study an agent that combines all the aforementioned improvements, exploring its performance in Lunar Lander environment from OpenAI gym (\cite{openai}).
+
+    \subsection{Background}
+    \label{subsec:background}
+    In the standard reinforcement learning setting, agent interacts with an environment over discrete time steps.
+    At each time step $t$, the agent perceives a state $s_{t} \in \mathcal{S}$, chooses an action from a discrete set $a_{t} \in \mathcal{A}$ accordingly to a policy $\pi$, where $\pi$ is a mapping from state space $\mathcal{S}$ to action space $\mathcal{A}$, and observes a reward $r_{t}$ and a next state $s_{t+1}$.
+    This process continues until the agent reaches a terminal state, after which the process is restarted.
+    The purpose of the agent is to maximize the expected discounted reward $R_{t} = \sum_{k=1}^\infty \gamma^k r_{k+t}$, where $\gamma \in (0, 1]$ is the discount factor that trades-off the importance of immediate vs future rewards.
+    This interaction between the agent and the environment is formalized as a \emph{Markov Decision Process} (MDP), described by $\langle \mathcal{S}, \mathcal{A}, T, r, \gamma \rangle$ tuple, where $T(s, a, s') = P[s_{t+1} = s' | s_{t} = s, a_{t} = a]$ is the stochastic transition function.
+
+    For an agent following a stochastic policy $\pi$, the true value of an action $a$ in a state $s$, and the value of that state $s$ are:
+    \begin{align}
+        Q^{\pi}(s, a) &= \mathbb{E}[R_{t} | s_{t} = s, a_{t} = a], \text{and} \label{eq:1} \\
+        V^{\pi}(s) &= \mathbb{E}_{a\sim \pi(s)}[Q^{\pi}(s, a)] \label{eq:2}
+    \end{align}
+    The optimal state-value function is defined as $Q^{*}(s, a) = \max_{\pi}Q^{\pi}(s, a)$.
+    Under deterministic policy $a = \argmax_{a' \in \mathcal{A}}Q^{*}(s, a')$, it follows that $V^{*} = \max_{a}Q^{*}(s, a)$.
+    Also, the optimal state-value function $Q$ satisfies the Bellman equation:
+    \begin{equation}
+        Q^{*}(s, a) = \mathbb{E}_{s'}\left[r + \gamma \max_{a'} Q^{*}(s', a') \:|\: s, a\right]
+    \end{equation}
+
+    A common way of deriving a new policy from a state-action value function is to act $\epsilon$-greedly with respect to the action values, i.e. taking the action with the highest value with probability $(1 - \epsilon)$ or otherwise acting randomly with probability $\epsilon$.
+    The optimal policy is easily derived from the optimal state-action value function by selecting the highest-valued action in each state.
+
+    One of the early breakthroughs in RL was the development of an off-policy Temporal Difference control algorithm known as \emph{Q-learning} (\cite{qlearning}), defined by:
+    \begin{equation}
+        Q(s_{t}, a_{t}) \leftarrow Q(s_{t}, a_{t}) + \alpha \left[ r_{t+1} + \gamma \max_{a} Q(s_{t+1}, a) - Q(s_{t}, a_{t}) \right],
+    \end{equation}
+    where $\alpha$ is a constant step-size parameter, or learning rate.
+    The learned action-value function $Q$ directly approximates the \emph{optimal} action-value function $Q^{*}$, independent of the policy being followed.
+
+    However, large state and/or action spaces make it tractable to learn $Q$ value estimates for each state-action pairs independently.
+    To solve this challenge, DQN (\cite{dqn}) successfully used deep neural networks to approximate the state-action value function as $Q(s, a \theta)$, where $\theta$ are the parameters of the network.
+    For an $n$-dimensional state space and an action space containing $m$ actions, the neural network is a function from $\mathcal{R}^{n}$ to $\mathcal{R}^{m}$.
+
+    Two important components of the DQN algorithm proposed by \cite{dqn} are i) the use of a target network, and ii) the use of experience replay.
+    At each time step, the agent selects an action $\epsilon$-greedily with respect to the action values, and adds a transition $\langle s_{t}, a_{t}, r_{t}, s_{t+1} \rangle$ to the experience replay memory, that holds millions of experience tuples.
+    The parameters of the neural network are then optimized by using stochastic gradient descent to minimize the loss function at iteration $i$:
+    \begin{align}
+        L_{i}(\theta_{i}) &= \mathbb{E}_{s, a, r, s'} \left[ \left( y_{i} - Q(s, a; \theta_{i}) \right)^2 \right] \\
+        y_{i} &= r + \gamma \max_{a'}Q(s', a'; \theta^{-})
+    \end{align}
+    where $\theta^{-}$ are the parameters of a fixed and separate \emph{target network}.
+    The parameters of the target network $Q(s', a'; \theta^{-})$ are frozen for a fixed number of iterations while updating the \emph{online network} $Q(s, a; \theta_{i})$ by gradient descent.
+    The optimization is performed on mini-batches sampled uniformly at random from the experience replay memory.
+    These two additions greatly improves the stability of the algorithm, leading to super-human performance on several Atari games.
+
+    \subsection{DQN Extensions}
+    \label{subsec:extensions}
+
+    \paragraph{Double Q-learning.}
+    The max operator in standard Q-learning and DQN uses the same values both to select and to evaluate an action.
+    This makes it more likely to select overestimated values, resulting in overoptimistic value estimates.
+    To prevent this, we can decouple the selection from the evaluation.
+    This is the idea behind Double Q-learning.
+    It is possible to effectively combine this with DQN using the loss
+    \begin{align}
+        L_{i}(\theta_{i}) &= \mathbb{E}_{s, a, r, s'} \left[ \left( y_{i} - Q(s, a; \theta_{i}) \right)^2 \right] \\
+        y_{i} &= r + \gamma Q(s', \argmax_{a'} Q(s', a'; \theta_{i}); \theta^{-})
+    \end{align}
+
+    \paragraph{Dueling networks.}
+    \lipsum[1]
+
+    \lipsum[2]
+
+    \paragraph{Prioritized experience replay.}
+    \lipsum[2]
+
+    \lipsum[3]
+
+    \subsection{Lunar Lander Environment}
+    \label{subsec:lunarlander}
+    \lipsum[3]
+
+    \section{Methods}
+    \label{sec:methods}
+    \lipsum[1]
+    \lipsum[2]
+
+    \lipsum[3]
+    \lipsum[4]
 
 
 
-
-
-
-    \printbibliography
+\printbibliography
 
 \end{document}

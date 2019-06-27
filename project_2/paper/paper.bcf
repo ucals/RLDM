@@ -2000,6 +2000,10 @@
     <bcf:citekey order="3">ddqn</bcf:citekey>
     <bcf:citekey order="4">dueling</bcf:citekey>
     <bcf:citekey order="5">per</bcf:citekey>
+    <bcf:citekey order="6">openai</bcf:citekey>
+    <bcf:citekey order="7">qlearning</bcf:citekey>
+    <bcf:citekey order="8">dqn</bcf:citekey>
+    <bcf:citekey order="9">dqn</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="ynt">
