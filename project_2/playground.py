@@ -23,6 +23,8 @@ def exp_curves():
     ax.plot(x, y2, label='y2')
     ax.plot(x, y3, label='y3')
     ax.plot(x, y4, label='y4')
+    ax.axhline(0.05, label='base')
+
 
     #ax.plot(x, y5)
     #ax.plot(x, y6)
@@ -51,4 +53,4 @@ def exp2b():
 
 
 if __name__ == '__main__':
-    exp2b()
+    exp_curves()

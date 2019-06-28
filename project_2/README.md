@@ -38,5 +38,10 @@ Next steps:
     - Deploy in AWS (5a running locally) (DONE)
     
 TODO:
-- Put e3c to run locally (only the missing experiments to complete what was already done)
+- Put e3c to run locally (only the missing experiments to complete what was already done) (DONE)
+- 
+
+IDEAS:
+- Create a video that shows how changing alpha changes the learning curve (Hans Rosling TED)
+
 

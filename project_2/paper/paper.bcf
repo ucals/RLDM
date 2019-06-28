@@ -2004,6 +2004,7 @@
     <bcf:citekey order="7">qlearning</bcf:citekey>
     <bcf:citekey order="8">dqn</bcf:citekey>
     <bcf:citekey order="9">dqn</bcf:citekey>
+    <bcf:citekey order="10">per</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="ynt">
