@@ -187,6 +187,10 @@ Double DQN (DDQN; \cite{ddqn}) addresses the problem of overestimation of action
     As exploration strategy, we decayed $\epsilon$ following $\epsilon(t) = e^{-t/70}$, where $t$ is the current episode.
     If $\epsilon$ falls below $0.05$, it stays constant at $0.05$ from that point on.
 
+    In this experiment, we also simulate two different learning regimes.
+    In the first simulation, we keep the agent learning for 1000 episodes.
+    In the second simulation, we stop the learning as soon as 100-episodes rolling average of the score hits 200, acting greedily from that point on until reaching 1000 episodes, for comparison.
+
     \paragraph{Experiment 2: Effect of different gradient descent optimization algorithms and learning rates.}
     Next, we assess the effect of different optimization algorithms and their optimal learning rates on the integrated agent, which combines all DQN extensions.
     We simulate RMSProp, Adaptive Moment Estimation (Adam), and Stochastic Gradient Descent (SGD).
