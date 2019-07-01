@@ -1,0 +1,24 @@
+{
+    "experiments": [
+        {
+            "id": "E31",
+            "dueling": true,
+            "double": true,
+            "prioritized_er": true,
+            "alpha": 0.1,
+            "gamma": 0.99
+        }
+    ],
+    "global_params": {
+        "optimizer": "sgd",
+        "batch_size": 32,
+        "layers": [
+            512,
+            512
+        ],
+        "max_episodes": 1000,
+        "stop_when_solved": false,
+        "keep_learning": true,
+        "print_frequency": 50
+    }
+}

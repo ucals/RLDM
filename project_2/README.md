@@ -1,47 +1,39 @@
-Installing in a clean Ubuntu image:
-- sudo apt install python3-pip python python-setuptools python-dev python-augeas gcc swig dialog
-- pip3 install numpy scipy matplotlib ipython jupyter pandas sympy nose gym torch torchvision
-- Install http://www.kiranjose.in/blogs/getting-started-with-openai-gym-part-1-installation-and-configuration/:
-    - git clone https://github.com/pybox2d/pybox2d
-    - cd pybox2d/
-    - python3 setup.py clean
-    - python3 setup.py build
-    - sudo python3 setup.py install
-    - ssh-keygen -t rsa -b 4096 -C "souza@gatech.edu"
-    
-# Experiments
+# Lunar Lander with Deep Reinforcement Learning
+This code solves 2nd project of CS-7642-O03 Reinforcement Learning and Decision Making, part of OMSCS program, generating the charts used in the report:
+![Image](paper/images/fig1.png)
 
-1- Different learners
-- First version done
-- TODO: run another version, where agents keep learning for longer, and then test for 100 episodes (1b)
+## Usage
+Running it is pretty straightforward. Just do:
+```bash
+python3 main_pytorch.py
+```
+and the program will simulate the integrated agent described in the paper for a single run, learning for 500 episodes, then testing the trained agent for 100 episodes. This should take ~20min.
 
-2- Different learning rates
-- First version done
-- TODO: run another version, 1 run/experiment, but with more learning rates (scatter plot), and for different optimizers (2b)
+The charts used in the report are created by running the experiments in the `experiments` folder. In each of its subfolders, there is a `protocol.json` file containing the details of that specific experiment. To run these experiments, you should either run:
+```bash
+python3 parallel_runs.py folder_name
+```
+or
+```bash
+python3 parallel_experiments.py folder_name
+```
+where `folder_name` is the name of the experiment (e.g. `e1`, `e2`, `e_test`, etc). The first command executes multiple runs for each experiment, being this number set in global parameters in the json file. The second command executes a single run for each experiment in a protocol, but multiple experiments in parallel.
+These experiments take several days to generate the data. Once completed, the notebook `paper_figures.ipynb` is used to generate the paper figures.
 
-3- Different Gammas
-- First version taking too long
-- TODO: run a simpler version, 5 runs/experiment (3b)
+## Installation
+After cloning the code into your local environment, run:
+```bash
+sudo apt install python3-pip python python-setuptools python-dev python-augeas gcc swig dialog
+pip3 install numpy scipy matplotlib ipython jupyter pandas sympy nose gym torch torchvision
+```
+To [install PyBox2D](http://www.kiranjose.in/blogs/getting-started-with-openai-gym-part-1-installation-and-configuration/), run:
+```bash
+git clone https://github.com/pybox2d/pybox2d
+cd pybox2d/
+python3 setup.py clean
+python3 setup.py build
+sudo python3 setup.py install
+```
 
-4- Different Exploration strategies
-- TODO: test different epsilon curves
-
-Next steps:
-- Deploy e3b, simpler Gamma experiment, in AWS (DONE)
-- Parametrize different exploration strategies in experiment protocol (DONE)
-- Deploy e4, different exploration strategies, in AWS (DONE)
-- Do small change in code to execute e1b and deploy in AWS (DONE)
-- Prepare code to do single-run experiments in parallel (DONE)
-- Parametrize optimizer in experiment protocol (DONE)
-- Deploy 2b, different learning rates vs. optimizer., in AWS:
-    - Break 2b in 5a (RMSProp), 5b (Adam), and 5c (SGD) (DONE)
-    - Deploy in AWS (5a running locally) (DONE)
-    
-TODO:
-- Put e3c to run locally (only the missing experiments to complete what was already done) (DONE)
-- 
-
-IDEAS:
-- Create a video that shows how changing alpha changes the learning curve (Hans Rosling TED)
-
-
+## Author
+This program was created by [Carlos Souza](mailto:souza@gatech.edu), as 1st project of CS-7642-O03 Reinforcement Learning and Decision Making, part of OMSCS program.

@@ -28,15 +28,15 @@ citestyle=authoryear
 
 %\graphicspath{ {./images/} }
 
-\title{Playing Lunar Lander with Deep Reinforcement Learning}
+\title{Lunar Lander with Deep Reinforcement Learning}
 
-\date{June 28th, 2019}
+\date{June 30th, 2019}
 
 \author{
 Carlos Souza\thanks{Latest Git hash: INCLUDE LATEST GITHASH}\\
 %Department of Computer Science\\
 Georgia Institute of Technology\\
-São Paulo, SP, Brazil \\
+%São Paulo, SP, Brazil \\
 \texttt{souza@gatech.edu} \\
 }
 
@@ -47,13 +47,8 @@ São Paulo, SP, Brazil \\
 \begin{document}
     \maketitle
 
-    \begin{abstract}
-        \lipsum[1]
-    \end{abstract}
-
-
     % keywords can be removed
-    \keywords{Reinforcement learning \and Deep Reinforcement Learning \and Deep Q-Networks}
+    %\keywords{Reinforcement learning \and Deep Reinforcement Learning \and Deep Q-Networks}
     %\githash{DO NOT FORGET TO INCLUDE LATEST GIT HASH}
 
 
@@ -74,27 +69,6 @@ Double DQN (DDQN; \cite{ddqn}) addresses the problem of overestimation of action
 
     \subsection{Background}
     \label{subsec:background}
-    In the standard reinforcement learning setting, agent interacts with an environment over discrete time steps.
-    At each time step $t$, the agent perceives a state $s_{t} \in \mathcal{S}$, chooses an action from a discrete set $a_{t} \in \mathcal{A}$ accordingly to a policy $\pi$, where $\pi$ is a mapping from state space $\mathcal{S}$ to action space $\mathcal{A}$, and observes a reward $r_{t}$ and a next state $s_{t+1}$.
-    This process continues until the agent reaches a terminal state, after which the process is restarted.
-    The purpose of the agent is to maximize the expected discounted reward $R_{t} = \sum_{k=1}^\infty \gamma^k r_{k+t}$, where $\gamma \in (0, 1]$ is the discount factor that trades-off the importance of immediate vs future rewards.
-    This interaction between the agent and the environment is formalized as a \emph{Markov Decision Process} (MDP), described by $\langle \mathcal{S}, \mathcal{A}, T, r, \gamma \rangle$ tuple, where $T(s, a, s') = P[s_{t+1} = s' | s_{t} = s, a_{t} = a]$ is the stochastic transition function.
-
-    For an agent following a stochastic policy $\pi$, the true value of an action $a$ in a state $s$, and the value of that state $s$ are:
-    \begin{align}
-        Q^{\pi}(s, a) &= \mathbb{E}[R_{t} | s_{t} = s, a_{t} = a], \text{and} \label{eq:1} \\
-        V^{\pi}(s) &= \mathbb{E}_{a\sim \pi(s)}[Q^{\pi}(s, a)] \label{eq:2}
-    \end{align}
-    The optimal state-value function is defined as $Q^{*}(s, a) = \max_{\pi}Q^{\pi}(s, a)$.
-    Under deterministic policy $a = \argmax_{a' \in \mathcal{A}}Q^{*}(s, a')$, it follows that $V^{*} = \max_{a}Q^{*}(s, a)$.
-    Also, the optimal state-value function $Q$ satisfies the Bellman equation:
-    \begin{equation}
-        Q^{*}(s, a) = \mathbb{E}_{s'}\left[r + \gamma \max_{a'} Q^{*}(s', a') \:|\: s, a\right]
-    \end{equation}
-
-    A common way of deriving a new policy from a state-action value function is to act $\epsilon$-greedly with respect to the action values, i.e. taking the action with the highest value with probability $(1 - \epsilon)$ or otherwise acting randomly with probability $\epsilon$.
-    The optimal policy is easily derived from the optimal state-action value function by selecting the highest-valued action in each state.
-
     One of the early breakthroughs in RL was the development of an off-policy Temporal Difference control algorithm known as \emph{Q-learning} (\cite{qlearning}), defined by:
     \begin{equation}
         Q(s_{t}, a_{t}) \leftarrow Q(s_{t}, a_{t}) + \alpha \left[ r_{t+1} + \gamma \max_{a} Q(s_{t+1}, a) - Q(s_{t}, a_{t}) \right],
@@ -102,7 +76,7 @@ Double DQN (DDQN; \cite{ddqn}) addresses the problem of overestimation of action
     where $\alpha$ is a constant step-size parameter, or learning rate.
     The learned action-value function $Q$ directly approximates the \emph{optimal} action-value function $Q^{*}$, independent of the policy being followed.
 
-    However, large state and/or action spaces make it tractable to learn $Q$ value estimates for each state-action pairs independently.
+    However, large state and/or action spaces make it intractable to learn $Q$ value estimates for each state-action pairs independently.
     To solve this challenge, DQN (\cite{dqn}) successfully used deep neural networks to approximate the state-action value function as $Q(s, a; \theta)$, where $\theta$ are the parameters of the network.
     For an $n$-dimensional state space and an action space containing $m$ actions, the neural network is a function from $\mathbb{R}^{n}$ to $\mathbb{R}^{m}$.
 
@@ -154,89 +128,130 @@ Double DQN (DDQN; \cite{ddqn}) addresses the problem of overestimation of action
 
     Prioritized experience replay is shown to deliver both faster learning and better final policy quality across most games of the Atari benchmark suite, as compared to uniform experience replay.
 
-    \subsection{Lunar Lander Environment}
-    \label{subsec:lunarlander}
-    Rocket trajectory optimization is a classic topic in Optimal Control.
-    OpenAI Gym proposes an environment where an agent has to control a "Lunar Lander" with the purpose of landing it successfully in a landing pad.
-    The agent has four possible actions: do nothing, fire the left orientation engine, fire the main engine, or fire the right orientation engine.
-    The state space is a 8-dimensional continuous space: at each time step, environment returns Lunar Lander position (x, y), velocities (horizontal and vertical), angle, angular velocity, and whether left/right legs are in contact with the ground.
-    Landing pad coordinates are (0,0).
-    Reward for moving from the top of the screen to landing pad and zero speed is about 100..140 points.
-    If lander moves away from landing pad it loses reward back.
-    Episode finishes if the lander crashes or comes to rest, receiving additional -100 or +100 points.
-    Each leg ground contact is +10.
-    Firing main engine is -0.3 points each frame.
-    Firing side engine is -0.03 points each frame.
-    The problem is considered to be solved when the agent achieves 200 score over past 100-episodes rolling average.
-
     \section{Methods}
     \label{sec:methods}
     To investigate how the integrated agent that combines all described improvements perform, using Lunar Lander environment as test-bed, we propose 5 different experiments detailed below.
 
-    \paragraph{Experiment 1: Impact of DQN extensions.}
-    We start our study by analyzing the impact of each DQN extension, comparing all possible combinations.
+    \paragraph{Experiment 1: Impact of different learning protocols and DQN extensions.}
+    We started our study by analyzing the impact of two learning protocols in 8 different agents.
+    In the first learning protocol, agents kept learning for 1000 episodes.
+    In the second, we stopped the learning as soon as 100-episodes rolling average of the score hit 200, acting greedily from that point on until reaching 1000 episodes, for comparison.
+    The 8 different agents combine all DQN extensions, representing all possible combinations.
     The simplest agent implements vanilla DQN, while the most sophisticated, the integrated agent, combines all extensions described earlier.
     We also compared these with agents containing only one and/or two extensions, to understand the impact of each extension on their performance.
 
     While varying the extensions, we kept all other hyper-parameters frozen.
-    We use RMSProp as the optimization algorithm, with $\alpha$ (learning rate) of $0.0001$.
-    $\gamma$ (discount factor) is set at $0.99$.
-    Replay memory capacity is set to $10,000$ experience tuples, and training is performed using $32$ as mini-batch size.
+    We used RMSProp as the optimization algorithm, with $\alpha$ (learning rate) of $0.0001$.
+    $\gamma$ (discount factor) was set at $0.99$.
+    Replay memory capacity was set to $10,000$ experience tuples, and training was performed using $32$ as mini-batch size.
     The network architecture consists of 2 fully-connected hidden layers with 512 neurons each, both with rectified linear unit (ReLU) activation functions (for dueling network: we added a fully-connected layer as described previously).
     For prioritized replay, we annealed the bias by progressively increasing $\beta$ (exponent in importance-sampling weights) from $0.4$ to $1$.
-    As exploration strategy, we decayed $\epsilon$ following $\epsilon(t) = e^{-t/70}$, where $t$ is the current episode.
-    If $\epsilon$ falls below $0.05$, it stays constant at $0.05$ from that point on.
+    As exploration strategy, we decayed $\epsilon$ following $\epsilon(t) = e^{-t/70}$, where $t$ is the current episode, until hitting $0.05$, staying constant at $0.05$ from that point on.
 
-    In this experiment, we also simulate two different learning regimes.
-    In the first simulation, we keep the agent learning for 1000 episodes.
-    In the second simulation, we stop the learning as soon as 100-episodes rolling average of the score hits 200, acting greedily from that point on until reaching 1000 episodes, for comparison.
+    To reduce the variability given the stochasticity, this experiment was performed 20 times for each variant.
 
     \paragraph{Experiment 2: Effect of different gradient descent optimization algorithms and learning rates.}
-    Next, we assess the effect of different optimization algorithms and their optimal learning rates on the integrated agent, which combines all DQN extensions.
-    We simulate RMSProp, Adaptive Moment Estimation (Adam), and Stochastic Gradient Descent (SGD).
-    For those 3 different algorithms, we test $30$ different $\alpha$ (learning rates), evenly spaced on a log scale from $10^{-6}$ to $10^{-1}$.
-    All other hyper-parameters are kept frozen as described in experiment 1.
+    Next, we assessed the effect of different optimization algorithms and their optimal learning rates on the integrated agent, which combines all DQN extensions.
+    We simulated RMSProp, Adaptive Moment Estimation (Adam), and Stochastic Gradient Descent (SGD).
+    For those 3 different algorithms, we tested $30$ different $\alpha$ (learning rates), evenly spaced on a log scale from $10^{-6}$ to $10^{-1}$.
+    All other hyper-parameters were kept frozen as described in experiment 1.
 
     \paragraph{Experiment 3: Discount factor sensitivity.}
-    In this experiment, we investigate the effect of $\gamma$ in the integrated agent's performance.
-    We test all $\gamma \in [0.8, 0.85, 0.9, 0.92, 0.94, 0.96, 0.98, 0.99, 1.0]$.
-    As usual, all other hyper-parameters are kept frozen.
+    In this experiment, we investigated the effect of $\gamma$ in the integrated agent's performance.
+    We tested all $\gamma \in [0.8, 0.85, 0.9, 0.92, 0.94, 0.96, 0.98, 0.99, 1.0]$.
+    As usual, all other hyper-parameters were kept frozen.
+    To reduce the variability given the stochasticity, this experiment was performed 5 times for each variant.
 
     \paragraph{Experiment 4: Evaluation of different exploration strategies.}
-    Following, we evaluate the impact of $10$ different $\epsilon$ decay curves.
-    We assess two types of curves: exponential decay functions, $\epsilon(t) = e^{-k t}$; and inverted logistic functions, $\epsilon(t) = 1 / (1 + e^{-k_{1} (t - k_{2})})$.
-    Again, all other hyper-parameters are kept frozen.
-
-    \paragraph{Experiment 5: Effect of kick-starting replay memory with human experience.}
-    Finally, we investigate how kick-starting the replay memory with human experience can speed-up agent learning.
-    To do it, we generate experience tuples $\langle s, a, s', r \rangle$ by playing Lunar Lander by hand, and use this data to pre-populate the replay memory.
-    Then, we set our integrated agent to start learning procedure, with $\epsilon$ constant at $0.05$.
+    Following, we evaluated the impact of $10$ different $\epsilon$ decay curves.
+    We assessed two types of curves: exponential decay functions, $\epsilon(t) = e^{-k t}$; and inverted logistic functions, $\epsilon(t) = 1 / (1 + e^{-k_{1} (t - k_{2})})$.
+    Again, all other hyper-parameters were kept frozen.
+    To reduce the variability given the stochasticity, this experiment was performed 10 times for each variant.
 
     \section{Results}
     \label{sec:results}
 
-    \lipsum[1]
-    \lipsum[2]
+    \begin{figure}[t]
+        \includegraphics[width=\textwidth]{./images/fig1.png}
+        \centering
+        \caption{Different learning protocols.
+        In the left, integrated agent (combining all DQN extensions) learns continuously for 1000 episodes.
+        In the center, integrated agent learns just until it achieves 200 score over 100-episodes rolling average, acting greedily from that point on until 1000 episodes.
+        In the right, we test both learning protocols, comparing both trained agents (no learning).
+        All results presented are averages of 20 runs to reduce the variance: the shaded area is the standard deviation.}
+        \label{fig:fig1}
+    \end{figure}
 
-    \lipsum[3]
-    \lipsum[4]
+    Figure \ref{fig:fig1} presents first part of experiment 1, in which we confirmed our expectations.
+    In both learning protocols, the integrated agent, combining all DQN extensions, solved Lunar Lander environment by reaching 200 score over past 100-episodes rolling average around the same time, in 230 and 226 episodes respectively.
+    Also, as expected, the learning protocol that kept the agent learning for the whole 1000 episodes achieved a higher score in the 100-episodes test, 259 in average, in comparison to the learning protocol that stopped the learning after solving the environment (only 237 in average).
 
-    \lipsum[5]
-    \lipsum[6]
+    \begin{figure}[h]
+        \includegraphics[width=\textwidth]{./images/fig2.png}
+        \centering
+        \caption{Different agents.
+        The 2 charts in the left show the first learning protocol, where agents keep learning for 1000 episodes, while the 2 charts in the right show the second learning protocol, where agents stop learning right after reaching 200 score on 100-episodes rolling average.
+        To better visualize the test score results, comparing the performance of all different agents over 100 episodes with no learning, in second and fourth chart we used boxplots, for the first and second learning protocols respectively.}
+        \label{fig:fig2}
+    \end{figure}
 
-    \lipsum[1]
-    \lipsum[2]
+    Figure \ref{fig:fig2} presents second part of experiment 1.
+    First 2 charts show first learning protocol (all agents keep learning for 1000 episodes), while last 2 charts show second learning protocol (agents stop learning as soon as they hit 200 score).
+    Regardless of the learning protocol, all agents solve Lunar Lander environment in 200 to 250 episodes.
 
-    \lipsum[3]
-    \lipsum[4]
+    In the first learning protocol, the agent with the second worst performance was the vanilla DQN, with 251 score over 100-episodes test, contradicting our expectation: we expected this agent to show the poorest performance.
+    The agent with the worst performance implemented DQN with Dueling Networks and Prioritized Experience Replay (DuelDQN+PER).
+    Also contradicting our expectation, two agents showed better performance than the integrated agent (257 score): the agent with Dueling Networks + Double DQN (DuelDDQN, with 263 score), and the DQN agent with Prioritized Experience Replay (DQN+PER, with 267 score).
 
-    \lipsum[5]
-    \lipsum[6]
+    In the second learning protocol, the best agent was the integrated agent (237 score), which combines all DQN extensions, confirming our expectation.
+    However, contradicting our expectation, in this case the worst performance was not the vanilla DQN, but surprisingly the DQN agent with Prioritized Experience Replay (PER, with 204 score), which had performed best in the first learning protocol.
+
+    These results suggest that the integrated agent is the best choice in limited/short training time, as it scored the highest amongst all options when learning happened only until 100-episodes rolling average hit 200 score.
+    They also suggest that the Prioritized Experience Replay extension benefit is only perceived when learning happens for longer.
+    Another interesting observation is regarding the agent with Double DQN and Prioritized Experience Replay (DDQN+PER).
+    It performed second worse in first learning protocol, but second best in second learning protocol, which suggests those extensions, combined, are great tools to improve the performance in limited training time, but are not as interesting when we have time to train for longer periods.
+
+    \begin{figure}[t]
+        \includegraphics[width=\textwidth]{./images/fig3.png}
+        \centering
+        \caption{First 3 charts show best score achieved by integrated agent over 1000 episodes using different optimization algorithms and learning rates, while chart in the right shows score evolution over 1000 episodes for different discount factors.}
+        \label{fig:fig3}
+    \end{figure}
+
+    Figure \ref{fig:fig3} presents experiment 2 and 3.
+    All optimization algorithms produced comparable best performances: RMSProp best result was 282 score for $\alpha = 6.8 \times 10^{-5}$, Adaptive Moment Estimation (Adam) best result was 281 score for $\alpha = 3.2 \times 10^{-4}$, and Stochastic Gradient Descent (SGD) best result was 277 for $\alpha = 10^{-2}$.
+
+    An interesting observation can be made regarding how many tested learning rates provided scores above 200.
+    13 out of 30 tested learning rates achieved results above 200 score for Adam algorithm;
+    11 in the case of RMSProp;
+    and only 6 in the case of SGD.
+    This broader range of learning rates with superior performance for Adam and RMSProp in comparison to SGD suggests that those two algorithms should be preferred over SGD, which confirms our expectation.
+
+    In figure \ref{fig:fig3} we can also see the impact of discount factor in agent's convergence.
+    From the different discount factors tested, only $\gamma = 0.98$ and $\gamma = 0.99$ enabled the integrated agent to solve the Lunar Lander environment, converging to scores above 200.
+
+    \begin{figure}[h]
+        \includegraphics[width=\textwidth]{./images/fig4.png}
+        \centering
+        \caption{Impact of different exploration strategies in agent's learning.
+        In the left, we show 10 different $\epsilon$-decay curves used, while in the right we show the effect of each of these curves in the integrated agent's performance.}
+        \label{fig:fig4}
+    \end{figure}
+
+    Results from our final experiment are present in figure \ref{fig:fig4}.
+    All exploration strategies enabled the integrated agent to converge and solve Lunar Lander environment regardless of their $\epsilon$-decay curve format, as expected.
+    However, some exploration strategies converged much faster.
+    Curve 4, described by $\epsilon(t) = e^{-t / 40}$, showed the best result, making the agent achieve 200 score over 100-episodes rolling average in 219 episodes.
+    Curve 10, described by $\epsilon(t) = 1 / (1 + e^{t/40 - 6})$, showed the worst result, converging in 390 episodes.
+    Curiously, curves 2, 3 and 6, which decay $\epsilon$ more aggressively than curve 4, performed worse than the best curve.
+    This observation is yet another occurrence of something noted in several experiments: the best performing hyper-parameter is never at extremes.
 
     \section{Conclusion}
     \label{sec:conclusion}
 
-    \lipsum[1]
+    In this work, we implemented Deep Q-Networks and some of their main extensions (Double Q-learning, Dueling Networks, and Prioritized Experience Replay), studying their performance in Lunar Lander environment from OpenAI gym.
+    We were able to confirm several points made in the articles that introduced DQN and their extensions.
+    Our experiments achieved results that would put our implemented agents in top 2nd position in the \href{https://github.com/openai/gym/wiki/Leaderboard#lunarlander-v2}{leaderboard}.
 
 \printbibliography
 
