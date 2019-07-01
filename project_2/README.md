@@ -36,4 +36,4 @@ sudo python3 setup.py install
 ```
 
 ## Author
-This program was created by [Carlos Souza](mailto:souza@gatech.edu), as 1st project of CS-7642-O03 Reinforcement Learning and Decision Making, part of OMSCS program.
+This program was created by [Carlos Souza](mailto:souza@gatech.edu), as 2nd project of CS-7642-O03 Reinforcement Learning and Decision Making, part of OMSCS program.
