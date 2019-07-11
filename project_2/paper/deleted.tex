@@ -1,0 +1,42 @@
+In the standard reinforcement learning setting, agent interacts with an environment over discrete time steps.
+    At each time step $t$, the agent perceives a state $s_{t} \in \mathcal{S}$, chooses an action from a discrete set $a_{t} \in \mathcal{A}$ accordingly to a policy $\pi$, where $\pi$ is a mapping from state space $\mathcal{S}$ to action space $\mathcal{A}$, and observes a reward $r_{t}$ and a next state $s_{t+1}$.
+    This process continues until the agent reaches a terminal state, after which the process is restarted.
+    The purpose of the agent is to maximize the expected discounted reward $R_{t} = \sum_{k=1}^\infty \gamma^k r_{k+t}$, where $\gamma \in (0, 1]$ is the discount factor that trades-off the importance of immediate vs future rewards.
+    This interaction between the agent and the environment is formalized as a \emph{Markov Decision Process} (MDP), described by $\langle \mathcal{S}, \mathcal{A}, T, r, \gamma \rangle$ tuple, where $T(s, a, s') = P[s_{t+1} = s' | s_{t} = s, a_{t} = a]$ is the stochastic transition function.
+
+For an agent following a stochastic policy $\pi$, the true value of an action $a$ in a state $s$, and the value of that state $s$ are:
+    \begin{align}
+        Q^{\pi}(s, a) &= \mathbb{E}[R_{t} | s_{t} = s, a_{t} = a], \text{and} \label{eq:1} \\
+        V^{\pi}(s) &= \mathbb{E}_{a\sim \pi(s)}[Q^{\pi}(s, a)] \label{eq:2}
+    \end{align}
+    The optimal state-value function is defined as $Q^{*}(s, a) = \max_{\pi}Q^{\pi}(s, a)$.
+    Under deterministic policy $a = \argmax_{a' \in \mathcal{A}}Q^{*}(s, a')$, it follows that $V^{*} = \max_{a}Q^{*}(s, a)$.
+    Also, the optimal state-value function $Q$ satisfies the Bellman equation:
+    \begin{equation}
+        Q^{*}(s, a) = \mathbb{E}_{s'}\left[r + \gamma \max_{a'} Q^{*}(s', a') \:|\: s, a\right]
+    \end{equation}
+
+    A common way of deriving a new policy from a state-action value function is to act $\epsilon$-greedly with respect to the action values, i.e. taking the action with the highest value with probability $(1 - \epsilon)$ or otherwise acting randomly with probability $\epsilon$.
+    The optimal policy is easily derived from the optimal state-action value function by selecting the highest-valued action in each state.
+
+
+\subsection{Lunar Lander Environment}
+    \label{subsec:lunarlander}
+    Rocket trajectory optimization is a classic topic in Optimal Control.
+    OpenAI Gym proposes an environment where an agent has to control a "Lunar Lander" with the purpose of landing it successfully in a landing pad.
+    The agent has four possible actions: do nothing, fire the left orientation engine, fire the main engine, or fire the right orientation engine.
+    The state space is a 8-dimensional continuous space: at each time step, environment returns Lunar Lander position (x, y), velocities (horizontal and vertical), angle, angular velocity, and whether left/right legs are in contact with the ground.
+    Landing pad coordinates are (0,0).
+    Reward for moving from the top of the screen to landing pad and zero speed is about 100..140 points.
+    If lander moves away from landing pad it loses reward back.
+    Episode finishes if the lander crashes or comes to rest, receiving additional -100 or +100 points.
+    Each leg ground contact is +10.
+    Firing main engine is -0.3 points each frame.
+    Firing side engine is -0.03 points each frame.
+    The problem is considered to be solved when the agent achieves 200 score over past 100-episodes rolling average.
+
+
+    \paragraph{Experiment 5: Effect of kick-starting replay memory with human experience.}
+    Finally, we investigate how kick-starting the replay memory with human experience can speed-up agent learning.
+    To do it, we generate experience tuples $\langle s, a, s', r \rangle$ by playing Lunar Lander by hand, and use this data to pre-populate the replay memory.
+    Then, we set our integrated agent to start learning procedure, with $\epsilon$ constant at $0.05$.
