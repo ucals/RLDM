@@ -42,8 +42,8 @@ class Soccer(object):
             random.seed(seed)
 
         self.num_actions = 5
-        self._pos_p0 = [None, None]
-        self._pos_p1 = [None, None]
+        self._pos_p0 = (None, None)
+        self._pos_p1 = (None, None)
         self._ball = None
         self._t = None
         self.reset()
@@ -113,8 +113,8 @@ class Soccer(object):
                 reward_p1 = -100
                 done = True
 
-        return [self._pos_p0, self._pos_p1, self._ball], \
-               [reward_p0, reward_p1], done, [first_to_act, self._t]
+        return (self._pos_p0, self._pos_p1, self._ball), \
+               (reward_p0, reward_p1), done, (first_to_act, self._t)
 
     def _get_new_position(self, curr_pos, action):
         """Updates current position given an action.
@@ -139,13 +139,13 @@ class Soccer(object):
             return curr_pos  # Boundary condition
 
         if action == 1:
-            return [0, curr_pos[1]]
+            return 0, curr_pos[1]
         elif action == 2:
-            return [curr_pos[0], curr_pos[1] + 1]
+            return curr_pos[0], curr_pos[1] + 1
         elif action == 3:
-            return [1, curr_pos[1]]
+            return 1, curr_pos[1]
         elif action == 4:
-            return [curr_pos[0], curr_pos[1] - 1]
+            return curr_pos[0], curr_pos[1] - 1
 
     def reset(self):
         """Resets the environment.
@@ -157,11 +157,11 @@ class Soccer(object):
             List containing current state components.
 
         """
-        self._pos_p0 = [0, 1]
-        self._pos_p1 = [0, 2]
+        self._pos_p0 = (0, 1)
+        self._pos_p1 = (0, 2)
         self._ball = np.random.randint(2)
         self._t = 0
-        return [self._pos_p0, self._pos_p1, self._ball]
+        return self._pos_p0, self._pos_p1, self._ball
 
     def render(self):
         """Renders the environment in screen, for visualization/debugging
@@ -188,15 +188,17 @@ class Soccer(object):
 
 if __name__ == '__main__':
     env = Soccer()
-    observation = env.reset()
+    state = env.reset()
     done = False
     while not done:
         env.render()
-        print(observation)
+        print(f'Player 0 position: {state[0]}, Player 1 position: {state[1]}, '
+              f'Who has the ball: {state[2]}\n')
         a0 = np.random.randint(env.num_actions)
         a1 = np.random.randint(env.num_actions)
-        observation, rewards, done, info = env.step(a0, a1)
-        print(f'Actions: {[a0, a1]}, Rewards: {rewards}, Done: {done}, Info: {info}')
+        next_state, rewards, done, info = env.step(a0, a1)
+        print(f'Actions: {(a0, a1)}, Rewards: {rewards}, Done: {done}, Info: {info}')
+        state = next_state
         if done:
             env.render()
             print('DONE!')

@@ -1,5 +1,17 @@
 import numpy as np
 import environment
+from collections import defaultdict
+
+
+class MultiQ(object):
+    def __init__(self, selection='Foe-Q', alpha=0.001, gamma=0.9):
+        self.env = environment.Soccer()
+        self.selection = selection
+        self.alpha = alpha
+        self.gamma = gamma
+
+    def train(self):
+        pass
 
 
 if __name__ == '__main__':
@@ -16,16 +28,12 @@ if __name__ == '__main__':
 
     env.render()
 
-    exit(1)
+    Q_matrix = defaultdict(lambda: np.zeros((env.num_actions, env.num_actions)))
+    s_0 = ((0, 1), (1, 2), 0)
+    s_1 = ((1, 1), (0, 0), 1)
 
-    done = False
-    while not done:
-        env.render()
-        print(observation)
-        a0 = np.random.randint(env.num_actions)
-        a1 = np.random.randint(env.num_actions)
-        observation, rewards, done, info = env.step(a0, a1)
-        print(f'Actions: {[a0, a1]}, Rewards: {rewards}, Done: {done}')
-        if done:
-            env.render()
-            print('DONE!')
+    Q_matrix[s_0][1][2] = 1
+    print(Q_matrix[s_0])
+    print(Q_matrix[s_1])
+    Q_matrix[s_0][1][2] += 1
+    print(Q_matrix[s_0])
