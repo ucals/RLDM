@@ -54,20 +54,21 @@ def solve_rps(r):
     prob.writeLP("rps.lp")
     prob.solve()
     print("Status:", LpStatus[prob.status])
-    result = [0, 0, 0]
+
+    list_vars = ['RockProbability', 'PaperProbability', 'ScissorProbability']
+    result = dict()
+    for var in list_vars:
+        result[var] = 0
+
     for v in prob.variables():
         print(v.name, "=", v.varValue)
-        if v.name == 'RockProbability':
-            result[0] = v.varValue
-        elif v.name == 'PaperProbability':
-            result[1] = v.varValue
-        elif v.name == 'ScissorProbability':
-            result[2] = v.varValue
+        if v.name in list_vars:
+            result[v.name] = v.varValue
 
-    return result
+    return list(result.values())
 
 
 if __name__ == '__main__':
-    matrix = np.array([[0.0, 3.79, -1.0], [-3.79, 0.0, 4.98], [1.0, -4.98, 0.0]])
+    matrix = np.array([[0.0, 1.04, -2.07], [-1.04, 0.0, 1.57], [2.07, -1.57, 0.0]])
     result = solve_rps(matrix)
     print(result)
