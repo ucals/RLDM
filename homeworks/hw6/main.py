@@ -36,7 +36,7 @@ def test_pulp():
     print("Total Cost of Ingredients per can = ", value(prob.objective))
 
 
-def solve_rps(r):
+def solve_rps(r, verbose=False):
     prob = LpProblem("Rock, Paper, Scissor", LpMaximize)
 
     v = LpVariable("TotalValue")
@@ -45,30 +45,22 @@ def solve_rps(r):
     p_s = LpVariable("ScissorProbability", 0, 1)
 
     prob += v
-
     prob += p_r + p_p + p_s == 1
-    prob += r[0][0] * p_r + r[1][0] * p_p + r[2][0] * p_s >= v
-    prob += r[0][1] * p_r + r[1][1] * p_p + r[2][1] * p_s >= v
-    prob += r[0][2] * p_r + r[1][2] * p_p + r[2][2] * p_s >= v
+    for c in range(r.shape[1]):
+        prob += r[0][c] * p_r + r[1][c] * p_p + r[2][c] * p_s >= v
 
-    prob.writeLP("rps.lp")
     prob.solve()
-    print("Status:", LpStatus[prob.status])
 
-    list_vars = ['RockProbability', 'PaperProbability', 'ScissorProbability']
-    result = dict()
-    for var in list_vars:
-        result[var] = 0
+    if verbose:
+        print("Status:", LpStatus[prob.status])
+        for v in prob.variables():
+            print(v.name, "=", v.varValue)
 
-    for v in prob.variables():
-        print(v.name, "=", v.varValue)
-        if v.name in list_vars:
-            result[v.name] = v.varValue
-
-    return list(result.values())
+    return [p_r.varValue, p_p.varValue, p_s.varValue], v.varValue
 
 
 if __name__ == '__main__':
     matrix = np.array([[0.0, 1.04, -2.07], [-1.04, 0.0, 1.57], [2.07, -1.57, 0.0]])
-    result = solve_rps(matrix)
-    print(result)
+    result, total_value = solve_rps(matrix)
+    print(f'\nMixed strategy: {result}\nTotal value: {total_value}')
+
