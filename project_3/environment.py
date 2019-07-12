@@ -67,7 +67,10 @@ class Soccer(object):
 
         # Updates players positions, and defines ball possession
         if first_to_act == 0:
-            self._pos_p0 = self._get_new_position(self._pos_p0, action_p0)
+            possible_pos_p0 = self._get_new_position(self._pos_p0, action_p0)
+            if possible_pos_p0 != self._pos_p1:
+                self._pos_p0 = possible_pos_p0
+
             possible_pos_p1 = self._get_new_position(self._pos_p1, action_p1)
             if possible_pos_p1 != self._pos_p0:
                 self._pos_p1 = possible_pos_p1
@@ -75,7 +78,10 @@ class Soccer(object):
                 if self._ball == 1:
                     self._ball = 0
         else:
-            self._pos_p1 = self._get_new_position(self._pos_p1, action_p1)
+            possible_pos_p1 = self._get_new_position(self._pos_p1, action_p1)
+            if possible_pos_p1 != self._pos_p0:
+                self._pos_p1 = possible_pos_p1
+
             possible_pos_p0 = self._get_new_position(self._pos_p0, action_p0)
             if possible_pos_p0 != self._pos_p1:
                 self._pos_p0 = possible_pos_p0
