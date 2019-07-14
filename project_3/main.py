@@ -10,8 +10,10 @@ class MultiQ(object):
         self.selection = selection
         self.alpha = alpha
         self.gamma = gamma
-        self.Q_matrix = defaultdict(lambda: np.zeros((env.num_actions,
-                                                      env.num_actions)))
+        self.Q1 = defaultdict(lambda: np.zeros((env.num_actions,
+                                                env.num_actions)))
+        self.Q2 = defaultdict(lambda: np.zeros((env.num_actions,
+                                                env.num_actions)))
 
     def minimax(self, r):
         prob = LpProblem("Foe-Q", LpMaximize)
