@@ -10,13 +10,16 @@ class MultiQ(object):
         self.selection = selection
         self.alpha = alpha
         self.gamma = gamma
-        self.Q1 = defaultdict(lambda: np.zeros((env.num_actions,
-                                                env.num_actions)))
-        self.Q2 = defaultdict(lambda: np.zeros((env.num_actions,
-                                                env.num_actions)))
+        self.Q0 = defaultdict(lambda: np.zeros((self.env.num_actions,
+                                                self.env.num_actions)))
+        self.Q1 = defaultdict(lambda: np.zeros((self.env.num_actions,
+                                                self.env.num_actions)))
 
-    def minimax(self, r):
-        prob = LpProblem("Foe-Q", LpMaximize)
+    def minimax(self, r, maximin=False):
+        if not maximin:
+            prob = LpProblem("Foe-Q", LpMaximize)
+        else:
+            prob = LpProblem("Foe-Q", LpMinimize)
 
         v = LpVariable("TotalValue")
         p_0 = LpVariable("Action_0_Probability_Put", 0, 1)
@@ -28,62 +31,74 @@ class MultiQ(object):
         prob += v
         prob += p_0 + p_1 + p_2 + p_3 + p_4 == 1
         for c in range(r.shape[1]):
-            prob += r[0][c] * p_0 + r[1][c] * p_1 + r[2][c] * p_2 + r[3][c] * \
-                    p_3 + r[4][c] * p_4 >= v
+            if not maximin:
+                prob += r[0][c] * p_0 + r[1][c] * p_1 + r[2][c] * p_2 + \
+                        r[3][c] * p_3 + r[4][c] * p_4 >= v
+            else:
+                prob += r[0][c] * p_0 + r[1][c] * p_1 + r[2][c] * p_2 + \
+                        r[3][c] * p_3 + r[4][c] * p_4 <= v
 
         prob.solve()
         return [p_0.varValue, p_1.varValue, p_2.varValue, p_3.varValue,
                 p_4.varValue], v.varValue
 
-    def choose_actions(self, epsilon, prob_actions=None):
-        # TODO select actions following ε-greedy policy
-        a0 = np.random.randint(self.env.num_actions)
-        a1 = np.random.randint(self.env.num_actions)
+    def choose_actions(self, epsilon, prob_actions0=None, prob_actions1=None):
+        take_random_action = np.random.choice([True, False], p=[epsilon,
+                                                                1 - epsilon])
+        if take_random_action:
+            a0 = np.random.randint(self.env.num_actions)
+        else:
+            a0 = np.random.choice(self.env.num_actions, p=prob_actions0)
+
+        take_random_action = np.random.choice([True, False], p=[epsilon,
+                                                                1 - epsilon])
+        if take_random_action:
+            a1 = np.random.randint(self.env.num_actions)
+        else:
+            a1 = np.random.choice(self.env.num_actions, p=prob_actions1)
+
         return a0, a1
 
-    def train(self, num_episodes=1000, render=False, epsilon_decay=0.99):
+    def train(self, num_episodes=1000, render=False, epsilon_decay=0.99,
+              min_epsilon=0.05, print_same_line=True):
         epsilon = 1.0
+        t = 0
+        prob_actions0 = None
+        prob_actions1 = None
+
         for i_episode in range(num_episodes):
             state = self.env.reset()
             done = False
-            a0, a1 = self.choose_actions(state, epsilon)
+            a0, a1 = self.choose_actions(epsilon, prob_actions0, prob_actions1)
             while not done:
                 if render:
                     self.env.render()
 
                 next_state, rewards, done, info = self.env.step(a0, a1)
 
-                prob_actions, v = self.minimax(self.Q_matrix[next_state])
-                self.Q_matrix[state][a0][a1] = (1 - self.alpha) * self.Q_matrix[state][a0][a1] + self.alpha * ((1 - self.gamma) * rewards[0] + self.gamma * v)
+                prob_actions0, v0 = self.minimax(self.Q0[next_state])
+                self.Q0[state][a0][a1] = (1 - self.alpha) * self.Q0[state][a0][a1] + self.alpha * ((1 - self.gamma) * rewards[0] + self.gamma * v0)
+
+                prob_actions1, v1 = self.minimax(self.Q1[next_state], maximin=True)
+                self.Q1[state][a0][a1] = (1 - self.alpha) * self.Q1[state][a0][a1] + self.alpha * ((1 - self.gamma) * rewards[1] + self.gamma * v1)
+
+                # Log data in-screen
+                if t > 0 and print_same_line:
+                    sys.stdout.write(b'\033[2A'.decode())
+
+                print(f'Episode {i_episode + 1:>4}, ε: {epsilon:0.3f}, t: {t}\n'
+                      f'Actions: {(a0, a1)}, Rewards: {rewards}, Done: {done}, Info: {info}')
 
                 state = next_state
-                epsilon *= epsilon_decay
-                a0, a1 = self.choose_actions(epsilon, prob_actions)
+                epsilon = max(min_epsilon, epsilon * epsilon_decay)
+                a0, a1 = self.choose_actions(epsilon, prob_actions0, prob_actions1)
+                t += 1
 
                 if done and render:
-                    env.render()
+                    self.env.render()
 
 
 if __name__ == '__main__':
-    env = environment.Soccer()
-    observation = env.reset()
+    solver = MultiQ()
+    solver.train()
 
-    env._pos_p0 = [1, 1]
-    env._pos_p1 = [1, 2]
-    env._ball = 1
-    env.render()
-
-    observation, rewards, done, info = env.step(3, 4)
-    print(f'Actions: {[3, 4]}, Rewards: {rewards}, Done: {done}, Info: {info}')
-
-    env.render()
-
-    Q_matrix = defaultdict(lambda: np.zeros((env.num_actions, env.num_actions)))
-    s_0 = ((0, 1), (1, 2), 0)
-    s_1 = ((1, 1), (0, 0), 1)
-
-    Q_matrix[s_0][1][2] = 1
-    print(Q_matrix[s_0])
-    print(Q_matrix[s_1])
-    Q_matrix[s_0][1][2] += 1
-    print(Q_matrix[s_0])
