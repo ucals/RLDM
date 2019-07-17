@@ -197,7 +197,7 @@ if __name__ == '__main__':
         a0 = np.random.randint(env.num_actions)
         a1 = np.random.randint(env.num_actions)
         next_state, rewards, done, info = env.step(a0, a1)
-        print(f'Actions: {(a0, a1)}, Rewards: {rewards}, Done: {done}, Info: {info}')
+        print(f'Actions: {(a0, a1)}, Rewards: {rewards}, Done: {done}, Info: {info}, Next state: {next_state}')
         state = next_state
         if done:
             env.render()

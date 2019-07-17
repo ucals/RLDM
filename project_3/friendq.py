@@ -6,14 +6,9 @@ from collections import defaultdict
 
 
 class FriendQ(object):
-    def __init__(self, selection='Foe-Q', alpha0=1.0, alpha_min=0.001,
-                 alpha_decay=0.999995, gamma=0.9):
+    def __init__(self, alpha0=1.0, alpha_min=0.001, alpha_decay=0.999995,
+                 gamma=0.9):
         self.env = environment.Soccer()
-        if selection not in ['Friend-Q', 'Foe-Q', 'Q-learner', 'Correlated-Q']:
-            raise ValueError("Selection must be either 'Friend-Q', 'Foe-Q', "
-                             "'Q-learner' or 'Correlated-Q'")
-
-        self.selection = selection
         self.alpha0 = alpha0
         self.alpha_min = alpha_min
         self.alpha_decay = alpha_decay
@@ -116,6 +111,6 @@ class FriendQ(object):
 
 
 if __name__ == '__main__':
-    solver = FriendQ(selection='Friend-Q')
+    solver = FriendQ()
     solver.train()
 
