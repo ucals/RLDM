@@ -6,7 +6,7 @@ from collections import defaultdict
 
 
 class FriendQ(object):
-    def __init__(self, alpha0=1.0, alpha_min=0.001, alpha_decay=0.999995,
+    def __init__(self, alpha0=0.1, alpha_min=0.001, alpha_decay=0.999995,
                  gamma=0.9):
         self.env = environment.Soccer()
         self.alpha0 = alpha0
@@ -35,7 +35,7 @@ class FriendQ(object):
         else:
             possibilities = np.argwhere(self.Q1[state] == np.amax(self.Q1[state]))
             choice = np.random.choice(possibilities.shape[0])
-            a1 = possibilities[choice][1]
+            a1 = possibilities[choice][0]
 
         return a0, a1
 
@@ -66,18 +66,18 @@ class FriendQ(object):
 
                 next_state, rewards, done, info = self.env.step(a0, a1)
 
-                old_Q1 = self.Q1[state_s][0][3]
+                old_Q1 = self.Q1[state_s][3][0]
                 v0 = np.max(self.Q0[next_state])
                 v1 = np.max(self.Q1[next_state])
 
                 if done:
-                    self.Q0[state][a0][a1] = self.Q0[state][a1][a0] + alpha * (rewards[0] - self.Q0[state][a1][a0])
-                    self.Q1[state][a0][a1] = self.Q1[state][a0][a1] + alpha * (rewards[1] - self.Q1[state][a0][a1])
+                    self.Q0[state][a0][a1] = self.Q0[state][a0][a1] + alpha * (rewards[0] - self.Q0[state][a0][a1])
+                    self.Q1[state][a1][a0] = self.Q1[state][a1][a0] + alpha * (rewards[1] - self.Q1[state][a1][a0])
                 else:
-                    self.Q0[state][a0][a1] = self.Q0[state][a1][a0] + alpha * (rewards[0] + self.gamma * v0 - self.Q0[state][a1][a0])
-                    self.Q1[state][a0][a1] = self.Q1[state][a0][a1] + alpha * (rewards[1] + self.gamma * v1 - self.Q1[state][a0][a1])
+                    self.Q0[state][a0][a1] = self.Q0[state][a0][a1] + alpha * (rewards[0] + self.gamma * v0 - self.Q0[state][a0][a1])
+                    self.Q1[state][a1][a0] = self.Q1[state][a1][a0] + alpha * (rewards[1] + self.gamma * v1 - self.Q1[state][a1][a0])
 
-                new_Q1 = self.Q1[state_s][0][3]
+                new_Q1 = self.Q1[state_s][3][0]
 
                 if new_Q1 != old_Q1:
                     error = abs(new_Q1 - old_Q1)
@@ -101,8 +101,8 @@ class FriendQ(object):
 
                 state = next_state
                 epsilon = max(min_epsilon, epsilon * epsilon_decay)
-                #alpha = max(self.alpha_min, alpha * self.alpha_decay)
-                alpha = 1 / (t / self.alpha_min / num_timesteps + 1)
+                alpha = max(self.alpha_min, alpha * self.alpha_decay)
+                #alpha = 1 / (t / self.alpha_min / num_timesteps + 1)
 
                 t += 1
 
@@ -112,5 +112,5 @@ class FriendQ(object):
 
 if __name__ == '__main__':
     solver = FriendQ()
-    solver.train()
+    solver.train(log_filename='log_friendq1.csv')
 
