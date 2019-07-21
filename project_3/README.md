@@ -1,4 +1,9 @@
 # Project 3
 
 TODO:
-- Implement Correlated-Q
+- Format image
+- Write article
+- Write README.md
+- Comment code
+- Upload everything (do not forget githash)
+
