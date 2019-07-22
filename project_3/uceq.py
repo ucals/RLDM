@@ -200,11 +200,11 @@ class uCEQ(object):
                     self.Q1[state][a1][a0] = (1 - alpha) * self.Q1[state][a1][a0] + alpha * rewards[1]
                 else:
                     prob_actions0, v0 = self.pulp_ce(self.Q0[next_state], self.Q1[next_state])
-                    v0 = np.max(self.Q0[next_state])
+                    #v0 = np.max(self.Q0[next_state])
                     self.P0[next_state] = prob_actions0
 
                     prob_actions1, v1 = self.pulp_ce(self.Q1[next_state], self.Q0[next_state])
-                    v1 = np.max(self.Q1[next_state])
+                    #v1 = np.max(self.Q1[next_state])
                     self.P1[next_state] = prob_actions1
 
                     self.Q0[state][a0][a1] = (1 - alpha) * self.Q0[state][a0][a1] + alpha * (rewards[0] + self.gamma * v0)

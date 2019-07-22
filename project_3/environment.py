@@ -4,6 +4,9 @@
 This module implements Soccer environment as described in Greenwald & Hall's
 `Correlated-Q Learning paper`_. Implementation follows `OpenAI Gym standards`_.
 
+Created by Carlos Souza (souza@gatech.edu)
+Jul-2019
+
 .. _Correlated-Q Learning paper:
    https://www.aaai.org/Papers/ICML/2003/ICML03-034.pdf
 

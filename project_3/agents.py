@@ -1,9 +1,27 @@
+# -*- coding: utf-8 -*-
+"""OMSCS Reinforcement Learning - CS-7642-O03 - Project #3 Solution
+
+This code solves Project #3 from OMSCS Reinforcement Learning - CS-7642-O03,
+generating the data used in the report. Running it is straightforward:
+
+    $ python agents.py {qlearner, friendq, foeq, or uceq}
+
+This will train each of the agents, generating the CSV data used to create the
+the figure with all 4 charts in the file 'images/figure.png', used in the
+report.
+
+Created by Carlos Souza (souza@gatech.edu)
+Jul-2019
+
+"""
+
 import numpy as np
 import pandas as pd
 from pulp import *
 import environment
 from collections import defaultdict
 from abc import ABC, abstractmethod
+import argparse
 
 
 class BaseLearner(ABC):
@@ -299,7 +317,7 @@ class uCEQ(BaseLearner):
                                               self.env.num_actions) / \
             probabilities.sum(0)
         pi = np.sum(probabilities, axis=1)
-        v = np.sum(probabilities * r0)
+        v = np.max(np.sum(probabilities * r0, axis=1))
         return pi, v
 
     def build_ce_constraints(self, r0, r1):
@@ -368,3 +386,27 @@ class uCEQ(BaseLearner):
 
         new_Q1 = self.Q1[self.state_s][3][0]
         return old_Q1, new_Q1
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Generate Project 3 charts.')
+    parser.add_argument('agent', choices=['qlearner', 'friendq', 'foeq',
+                                          'uceq'])
+    parser.add_argument('-f', '--file', default=None)
+    args = parser.parse_args()
+
+    solver, filename = None, None
+    if args.agent == 'qlearner':
+        solver = QLearner()
+        filename = args.file if args.file is not None else 'qlearner.csv'
+    elif args.agent == 'friendq':
+        solver = FriendQ()
+        filename = args.file if args.file is not None else 'friendq.csv'
+    elif args.agent == 'foeq':
+        solver = FoeQ()
+        filename = args.file if args.file is not None else 'foeq.csv'
+    elif args.agent == 'uceq':
+        solver = uCEQ()
+        filename = args.file if args.file is not None else 'uceq.csv'
+
+    solver.train(log_filename=filename)
