@@ -47,12 +47,12 @@ São Paulo, SP, Brazil \\
 \begin{document}
     \maketitle
 
-    \begin{abstract}
-        \lipsum[1]
-    \end{abstract}
+    %\begin{abstract}
+    %    \lipsum[1]
+    %\end{abstract}
 
     % keywords can be removed
-    \keywords{Reinforcement learning \and Correlated-Q learning \and Markov games \and Nash equilibrium \and Correlated equilibrium}
+    %\keywords{Reinforcement learning \and Correlated-Q learning \and Markov games \and Nash equilibrium \and Correlated equilibrium}
 
     \section{Introduction}
     \label{sec:introduction}
@@ -183,7 +183,7 @@ São Paulo, SP, Brazil \\
     \subsection{Soccer Environment}
     \label{subsec:soccer}
     Greenwald and Hall simulated different multiagent-Q learning algorithms in a soccer grid game, a zero-sum game for which determninistic equilibrium policies do not exist.
-    The soccer field is a 2-rows by 4-columns grid, as shown in Figure\ref{fig1}.
+    The soccer field is a 2-rows by 4-columns grid, as shown in Figure \ref{fig1}.
     There are two opposite players, who can choose five different actions: move North, East, South, West or stick.
     The ball, represented by the circle, is always with one of the two players.
     At each time step, both players act in random order.
@@ -210,31 +210,45 @@ São Paulo, SP, Brazil \\
     At each time step, every agent chose his action following a $\epsilon$-greedy policy: we started the simulations with $\epsilon = 1$ and decayed it until $0.001$, by also multiplying it by $0.999995$.
 
     To solve the linear programming set of inequalities, required in Foe-Q and uCE-Q algorithms, we used \href{https://pythonhosted.org/PuLP/}{Python's PuLP optimization package}.
-    Despite its user-friendliness and fast learning curve, this library proven to be very slow in simulating the algorithms.
+    Despite its user-friendliness and fast learning curve, this library proven to be very slow in simulating the algorithms: Correlated-Q and Foe-Q simulations, performed in a MacBook Pro with 3.1 GHz Intel Core i5 processor and 16 GB of memory, took over 12 hours to complete.
     For future work that requires linear programming package and a massing number of calculations, a different solution must be used, such as \href{https://cvxopt.org/}{Python's CVXOPT}.
 
     \section{Results}
     \label{sec:results}
 
     \begin{figure}[t]
-        \includegraphics[width=\textwidth]{./images/figure.png}
+        \includegraphics[width=\textwidth]{./images/figure2.png}
         \centering
         \label{fig2}
-        \caption{Replication of Figures 3, 4 and 5 from Sutton's original paper.
-        In the left, average error on random walk problem under repeated presentations.
-        In the center, average error on random walk problem after 10 episodes for different values of $\alpha$ and $\gamma$.
-        In the right, average error at best $\alpha$ on random walk problem for different values of $\gamma$.}
+        \caption{Replication of Figures 3 from Greenwald and Hall's original paper.
+        Convergence in the soccer game.
+        All algorithms - except Q-learning - converge.}
     \end{figure}
 
-    \lipsum[0]
-    \lipsum[1]
-    \lipsum[2]
-    \lipsum[3]
+    Figure \ref{fig2} presents convergence in the soccer game for the four implemented algorithms: Q-learning, Friend-Q, Foe-Q and Correlated-Q (utilitarian).
+    The values on the x-axis represent the time steps, while y-values are the error $\mathsf{ERR}_{i}^{t} = | Q_{i}^{t}(s, \vec{a}) - Q_{i}^{t - 1}(s, \vec{a}) |$.
+    The error values for Correlated-Q, Foe-Q and Friend-Q reflect player A's Q-values corresponding to state $s$, with player A choosing to move South and player B choosing to stick.
+    The error values for Q-learner reflect player A's Q-values corresponding to state $s$, with player A choosing to move South; in this case, player B's action is irrelevant.
+
+    As shown by Greenwald and Hall in their original article, all algorithms converge, with Q-learning as exception.
+    Q-learning does not converge as it seeks deterministic optimal policies, which do not exist in the soccer game.
+    Friend-Q converges but its policies are irrational.
+    Correlated-Q and Foe-Q converge to similar solutions.
+    All charts replicate Greenwald and Hall perfectly, with exception of Correlated-Q learning.
+    In our experiments Correlated-Q learning converged faster than Foe-Q learning, while in the original paper both algorithms converged very similarly (actually in identical curves, which is odd due to the stochastic nature of the simulations).
+    Logically, there are four possible explanations for this difference: i) different learning rate decay curves, ii) different $\epsilon$-decay curves, iii) stochasticity, and iv) a problem/bug in our implementation.
+    The original article is not clear about whether they used the same learning rate and $\epsilon$-decay curves amongst all simulations.
+    By tunning these curves differently, customizing their decays for each simulation, we could achieve a better match between Foe-Q and Correlated-Q error charts.
+    However, assuming Greenwald and Hall used the same decay curves across simulations, as we did, either stochasticity or a problem/bug in our implementation could explain this difference.
+    In either case, more experiments should be performed to conclude whether this difference should be expected, given the stochasticity, or whether the code should be debugged, aiming to better reproduce the simulations and close the gap between Foe-Q and Correlated-Q error curves.
 
     \section{Conclusion}
     \label{sec:conclusion}
 
-    \lipsum[0]
+    In this work, we implemented different algorithms for learning Q-values in Markov Games, replicating Figure 3 from Greenwald and Hall's 2003 paper \emph{Correlated-Q Learning}.
+    Our results perfectly matched the results presented in the paper for 3 out of 4 algorithms: Q-learning, Friend-Q and Foe-Q.
+    In our experiments, Correlated-Q converged faster than Foe-Q, while in the original paper those two algorithms converged in identical curves.
+    We concluded by creating different hypothesis to explain this difference, and proposing new experiments to investigate and determine the root cause of the difference.
 
 \printbibliography
 

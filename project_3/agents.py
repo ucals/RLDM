@@ -7,8 +7,7 @@ generating the data used in the report. Running it is straightforward:
     $ python agents.py {qlearner, friendq, foeq, or uceq}
 
 This will train each of the agents, generating the CSV data used to create the
-the figure with all 4 charts in the file 'images/figure.png', used in the
-report.
+figure with all 4 charts in the file 'images/figure2.png', used in the report.
 
 Created by Carlos Souza (souza@gatech.edu)
 Jul-2019
