@@ -33,7 +33,7 @@ citestyle=authoryear
 \date{July 21st, 2019}
 
 \author{
-Carlos Souza\thanks{Latest Git hash: INCLUDE LATEST GITHASH}\\
+Carlos Souza\thanks{Latest Git hash: c3fbd99134e24e492923d18a0d624a7d61d4eddc}\\
 %Department of Computer Science\\
 Georgia Institute of Technology\\
 São Paulo, SP, Brazil \\
@@ -220,12 +220,12 @@ São Paulo, SP, Brazil \\
         \includegraphics[width=\textwidth]{./images/figure2.png}
         \centering
         \label{fig2}
-        \caption{Replication of Figures 3 from Greenwald and Hall's original paper.
+        \caption{Replication of Figure 3 from Greenwald and Hall's original paper.
         Convergence in the soccer game.
         All algorithms - except Q-learning - converge.}
     \end{figure}
 
-    Figure \ref{fig2} presents convergence in the soccer game for the four implemented algorithms: Q-learning, Friend-Q, Foe-Q and Correlated-Q (utilitarian).
+    Figure 2 presents convergence in the soccer game for the four implemented algorithms: Q-learning, Friend-Q, Foe-Q and Correlated-Q (utilitarian).
     The values on the x-axis represent the time steps, while y-values are the error $\mathsf{ERR}_{i}^{t} = | Q_{i}^{t}(s, \vec{a}) - Q_{i}^{t - 1}(s, \vec{a}) |$.
     The error values for Correlated-Q, Foe-Q and Friend-Q reflect player A's Q-values corresponding to state $s$, with player A choosing to move South and player B choosing to stick.
     The error values for Q-learner reflect player A's Q-values corresponding to state $s$, with player A choosing to move South; in this case, player B's action is irrelevant.
